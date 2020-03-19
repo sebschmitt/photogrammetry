@@ -9,14 +9,25 @@ include_directories(include)
 
 # create the variable SOURCES, which is a list of all source and header files
 set(SOURCES
+        src/CameraCalibration.cpp
+        src/calibration.cpp
         src/main.cpp
+        src/feature-matching.cpp
+        src/ply-model-exporter.cpp
+        src/essential-matrix.cpp
 )
 
 # add the files from SOURCES to the executable
 add_executable(yapgt ${SOURCES})
 
 # add the link from the opencv libs
-target_link_libraries(yapgt PRIVATE ${OpenCV_LIBS})# nlohmann_json::nlohmann_json)
+target_link_libraries(yapgt PRIVATE ${OpenCV_LIBS})
 
-# set c++ 17 standard
-set(CMAKE_CXX_STANDARD 17)
+# Enable C++ 17 Standard
+set_target_properties(yapgt PROPERTIES
+        CXX_STANDARD 17
+        CXX_STANDARD_REQUIRED ON
+        CXX_EXTENSIONS OFF
+)
+
+file(COPY resources DESTINATION ${CMAKE_BINARY_DIR})
