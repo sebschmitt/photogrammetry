@@ -15,7 +15,7 @@ set(SOURCES
         src/feature-matching.cpp
         src/ply-model-exporter.cpp
         src/essential-matrix.cpp
-)
+        include/argparser.h src/argparser.cpp)
 
 # add the files from SOURCES to the executable
 add_executable(yapgt ${SOURCES})
