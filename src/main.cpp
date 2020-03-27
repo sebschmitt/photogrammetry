@@ -8,36 +8,53 @@
 
 #include <iostream>
 
+#include "argparser.h"
+
+
 
 using namespace std;
 
 int main(int argc, char *argv[]) {
+    argparser::ArgumentParser parser("yapgt (yet another photogrammetry tool)");
+
+    argparser::Argument a_loadCalibration("loadcalibration", "Load calibration");
+    argparser::Argument a_saveCalibration("savecalibration", "Das ist ein test2");
+    argparser::Argument a_calibrationImages("calibration-images", "Images for Calibration");
+
+    parser.addArgument(&a_loadCalibration);
+    parser.addArgument(&a_saveCalibration);
+    parser.addArgument(&a_calibrationImages);
+
+    parser.parseArguments(argc, argv);
+
     Calibration calb = Calibration();
 
+    if (a_loadCalibration.isFound()) {
+        calb.loadCalibration(filesystem::path(a_loadCalibration.getValue<string>()));
+    }
 
-    filesystem::path calibrationFile("./resources/calibration.xml");
-    filesystem::path path("./resources/chessboard_images");
-
-    if (!filesystem::exists(calibrationFile)) {
+    if (a_calibrationImages.isFound()) {
+        filesystem::path path(a_loadCalibration.getValue<string>());
         vector<filesystem::path> filepaths;
         for (const auto& entry : filesystem::directory_iterator(path)) {
             filepaths.push_back(entry.path());
         }
 
         // number of inner corners per chessboard row and column
+        // TODO add argument
         unsigned int cornersRow = 6;
         unsigned int cornersColumn = 9;
 
         calb.calibrate(filepaths, cv::Size(cornersColumn, cornersRow));
-        calb.saveCalibration(calibrationFile);
-    } else {
-        calb.loadCalibration(calibrationFile);
     }
 
-    /* calb.loadCalibration("./resources/calibration.xml"); */
+     // TODO: check if either a_loadCalibration or a_calibrationImages was found
 
-    cout << "calibration successful" << endl;
+    if (a_saveCalibration.isFound()) {
+         calb.saveCalibration(filesystem::path(a_saveCalibration.getValue<string>()));
+    }
 
+    // TODO: add further arguments
 
     cv::Mat img1 = cv::imread("./resources/guitar_images/20200223_125417880_iOS.jpg");
     /* cv::Mat img1 = cv::imread("./resources/guitar_images/20200223_125427418_iOS.jpg", cv::IMREAD_GRAYSCALE); */
