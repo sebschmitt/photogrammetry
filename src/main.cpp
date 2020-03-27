@@ -17,8 +17,8 @@ using namespace std;
 int main(int argc, char *argv[]) {
     argparser::ArgumentParser parser("yapgt (yet another photogrammetry tool)");
 
-    argparser::Argument a_loadCalibration("loadcalibration", "Load calibration");
-    argparser::Argument a_saveCalibration("savecalibration", "Das ist ein test2");
+    argparser::Argument a_loadCalibration("loadcalibration", "Filepath to load calibration from");
+    argparser::Argument a_saveCalibration("savecalibration", "Filepath to save calibration to");
     argparser::Argument a_calibrationImages("calibration-images", "Images for Calibration");
 
     parser.addArgument(&a_loadCalibration);

@@ -46,7 +46,6 @@ namespace argparser {
             if (_argument->name.size() > longest_name)
                 longest_name = _argument->name.size();
         }
-        longest_name++;
 
         for (auto &_argument : _arguments) {
             std::cout << std::right << std::setw(longest_name)
