@@ -1,7 +1,7 @@
-cmake_minimum_required(VERSION 3.13.4)
+cmake_minimum_required(VERSION 3.15)
 
 # set project name
-project(OpenCVTest)
+project(yapgt)
 
 # generate compilation database for YouCompleteMe
 # option(CMAKE_EXPORT_COMPILE_COMMANDS "Generate compile_commands.json in build directory" ON)
@@ -30,7 +30,7 @@ set(SOURCES
 )
 
 # add the files from SOURCES to the executable
-add_executable(OpenCVTest ${SOURCES})
+add_executable(yapgt ${SOURCES})
 
 # add the link from the opencv libs
 target_link_libraries(yapgt PRIVATE ${OpenCV_LIBS})
