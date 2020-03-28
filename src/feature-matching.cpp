@@ -14,7 +14,9 @@ FeatureMatching::FeatureMatching(Calibration cameraCalibration) {
     calibration = cameraCalibration;
 }
 
-void FeatureMatching::findMatches(Mat image1, Mat image2, vector<Point2f> &imagePoints1, vector<Point2f> &imagePoints2) {
+void FeatureMatching::findMatches(const Mat& image1,
+                                  const Mat& image2,
+                                  vector<Point2f> &imagePoints1, vector<Point2f> &imagePoints2) {
     Mat processedImage1; 
     Mat processedImage2;
 
@@ -63,10 +65,11 @@ void FeatureMatching::findMatches(Mat image1, Mat image2, vector<Point2f> &image
     // return masked keypoints as points2f
     KeyPoint::convert(keyPoints1, imagePoints1, keypointIndexes1);
     KeyPoint::convert(keyPoints2, imagePoints2, keypointIndexes2);
+    cout << "Found " << imagePoints1.size() << " matching features." << endl;
 }
 
 
-void FeatureMatching::preprocessImage(Mat image, OutputArray processedImage) {
+void FeatureMatching::preprocessImage(const Mat& image, Mat& processedImage) {
 
     // remove distortion from image so that straight lines are straigt
     calibration.undistortImage(image, processedImage);
@@ -81,10 +84,10 @@ void FeatureMatching::preprocessImage(Mat image, OutputArray processedImage) {
 }
 
 
-void FeatureMatching::filterMatches(const vector<KeyPoint> keypoints1,
-                                    const vector<KeyPoint> keypoints2,
-                                    const vector<DMatch> &matches,
-                                    vector<DMatch> &filteredMatches,
+void FeatureMatching::filterMatches(const vector<KeyPoint>& keypoints1,
+                                    const vector<KeyPoint>& keypoints2,
+                                    const vector<DMatch>& matches,
+                                    vector<DMatch>& filteredMatches,
                                     Size imageSize){
     
     // max distance for matches is 25% of the max distance / image diagonal

@@ -1,4 +1,8 @@
-# cmake
+#thirdparty
+third-party/json/*
+!third-party/json/single_include/
+
+# cmake 
 CMakeLists.txt.user
 CMakeCache.txt
 CMakeFiles
@@ -426,5 +430,5 @@ MigrationBackup/
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
 
-# clion configuration file
-.idea/
+
+.clangd/

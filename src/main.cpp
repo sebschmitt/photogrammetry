@@ -38,9 +38,8 @@ int main(int argc, char *argv[]) {
 
     cout << "calibration successful" << endl;
 
-
-    cv::Mat img1 = cv::imread("./resources/guitar_images/20200223_125417880_iOS.jpg");
-    /* cv::Mat img1 = cv::imread("./resources/guitar_images/20200223_125427418_iOS.jpg", cv::IMREAD_GRAYSCALE); */
+    /* cv::Mat img1 = cv::imread("./resources/guitar_images/20200223_125417880_iOS.jpg"); */
+    cv::Mat img1 = cv::imread("./resources/guitar_images/20200223_125427418_iOS.jpg");
     cv::Mat img2 = cv::imread("./resources/guitar_images/20200223_125447874_iOS.jpg");
 
     /* cv::namedWindow("Matches", cv::WINDOW_FREERATIO); */
@@ -57,23 +56,19 @@ int main(int argc, char *argv[]) {
     cout << "matching successful" << endl;
     EssentialMatrix essentialMatrixComputer(calb);
 
-    cv::Mat cameraRotation, cameraTranslation;
+    cv::Mat1d extrincts, projectionMatrix;
+    cv::Mat1f worldPoints;
     essentialMatrixComputer.determineEssentialMatrix(imagePoints1,
                                                      imagePoints2,
-                                                     cameraRotation,
-                                                     cameraTranslation);
+                                                     extrincts,
+                                                     projectionMatrix,
+                                                     worldPoints);
+    cout << worldPoints << endl;;
+    worldPoints = worldPoints;
+    cout << worldPoints << endl;
 
+    worldPoints.pop_back();
 
-
-
-    cv::Mat test = (cv::Mat_<float>(3,5) << 5, 5, 5,
-                                             10, 20, 10,
-                                             15, 13, 15,
-                                             30, 20, 20,
-                                             20, 10, 25);
-
-   PlyModelExporter exporter;
-
-   exporter.exportPointCloud("./resources/test.ply", test);
-
+    PlyModelExporter exporter;
+    exporter.exportPointCloud("./resources/test.ply", worldPoints);
 }
