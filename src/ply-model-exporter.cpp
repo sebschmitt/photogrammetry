@@ -19,6 +19,12 @@ void PlyModelExporter::exportPointCloud(const filesystem::path& filepath,
     if (filepath.extension() != ".ply")
         throw runtime_error("Invalid file extension " + filepath.extension().string() + ". Exptected .ply");
 
+    if (worldPoints.channels() != 1) 
+        throw runtime_error("Only 1 channel matrices are supported.");
+
+    if (worldPoints.type() != CV_32FC1)
+        throw runtime_error("Only matrices with floating point values are supported.");
+
     ofstream outputfile(filepath);
 
     if (outputfile.is_open()) {
@@ -52,7 +58,6 @@ void PlyModelExporter::writeHeader(ofstream& outputfile, const Mat& vertices) {
 }
 
 void PlyModelExporter::writeVertexList(ofstream& outputfile, const Mat& vertices) {
-
     for (size_t col = 0; col < vertices.cols; col++) {
         outputfile << vertices.at<float>(0, col) << " ";
         outputfile << vertices.at<float>(1, col) << " ";
