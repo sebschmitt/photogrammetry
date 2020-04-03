@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
 
     argparser::Argument a_loadCalibration("loadcalibration", "Load calibration");
     argparser::Argument a_saveCalibration("savecalibration", "Das ist ein test2");
-    argparser::Argument a_calibrationImages("calibration-images", "Images for Calibration");
+    argparser::Argument a_calibrationImages("calibrationImages", "Images for Calibration");
 
     parser.addArgument(&a_loadCalibration);
     parser.addArgument(&a_saveCalibration);
@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (a_calibrationImages.isFound()) {
-        filesystem::path path(a_loadCalibration.getValue<string>());
+        filesystem::path path(a_calibrationImages.getValue<string>());
         vector<filesystem::path> filepaths;
         for (const auto& entry : filesystem::directory_iterator(path)) {
             filepaths.push_back(entry.path());

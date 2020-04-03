@@ -5,6 +5,8 @@
 #ifndef YAPGT_ARGPARSER_H
 #define YAPGT_ARGPARSER_H
 
+#include <string>
+#include <sstream>
 #include <iostream>
 #include <vector>
 
