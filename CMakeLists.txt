@@ -1,11 +1,23 @@
 cmake_minimum_required(VERSION 3.15)
+
+# set project name
 project(yapgt)
+
+# generate compilation database for YouCompleteMe
+# option(CMAKE_EXPORT_COMPILE_COMMANDS "Generate compile_commands.json in build directory" ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+set(JSON_BuildTests OFF CACHE INTERNAL "")
 
 # search for opencv and make it a required depenency
 find_package(OpenCV REQUIRED)
 
-# add include folder for header files
+
+# add the include folder for the header files
+# target_include_directories(OpenCVTest PRIVATE ./include)
 include_directories(include)
+
+# add_subdirectory(third-party/json)
 
 # create the variable SOURCES, which is a list of all source and header files
 set(SOURCES

@@ -8,36 +8,41 @@ class EssentialMatrix {
 
     private:
         Calibration cameraCalibration;
-        int pointsInfrontCamera(const cv::Mat inliners1,
-                                 const cv::Mat inliners2,
-                                 const cv::Mat &cameraRotation,
-                                 const cv::Mat &cameraTranslation);
+        int pointsInfrontCamera(const cv::Mat1f& inliners1,
+                                const cv::Mat1f& inliners2,
+                                const cv::Mat1d& cameraRotation,
+                                const cv::Mat1d& cameraTranslation,
+                                const cv::Mat1d& extrincts,
+                                const cv::Mat1d& projectionMatrix,
+                                cv::Mat1f& worldPoints);
 
-        void decomposeEssentialMatrix(const cv::Mat &essentialMatrix,
-                                      const cv::Mat &inliers1,
-                                      const cv::Mat &inliers2,
-                                      cv::Mat &rotation,
-                                      cv::Mat &translation);
+        void decomposeEssentialMatrix(const cv::Mat1d& essentialMatrix,
+                                      const cv::Mat1f& inliers1,
+                                      const cv::Mat1f& inliers2,
+                                      cv::Mat1d& extrincts,
+                                      cv::Mat1d& projectionMatrix,
+                                      cv::Mat1f& worldPoints);
 
         template<class T> 
         std::vector<T> applyMask(const std::vector<T>& InputArray,
-                            const std::vector<uchar>& mask);
+                                 const std::vector<uchar>& mask);
 
-        cv::Mat normalizePoints(const std::vector<cv::Point2f>& imagePoint);
+        cv::Mat1f homogenizePoints(const std::vector<cv::Point2f>& imagePoint);
                                       
         
-        double calculateDepth(const cv::Mat &rotationRow1,
-                              const cv::Mat &rotationRow2,
-                              const cv::Mat &translation,
-                              const double respectivePoint,
-                              const cv::Mat &imagePoint1);
+        /* double calculateDepth(const cv::Mat1d& rotationMatrix, */
+        /*                       const cv::Mat1d& translationVector, */
+        /*                       const cv::Mat1f& imagePoint2, */
+        /*                       const int pointIndex); */
 
     public:
         EssentialMatrix(Calibration cameraCalibration);
+
         void determineEssentialMatrix(const std::vector<cv::Point2f> &pointsCamera1,
                                       const std::vector<cv::Point2f> &pointsCamera2,
-                                      cv::Mat &cameraRotation,
-                                      cv::Mat &cameraTranslation);
+                                      cv::Mat1d& extrincts,
+                                      cv::Mat1d& projectionMatrix,
+                                      cv::Mat1f& worldPoints);
 
 };
 
