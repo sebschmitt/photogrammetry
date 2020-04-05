@@ -47,6 +47,8 @@ void EssentialMatrix::determineEssentialMatrix(const vector<Point2f> &pointsCame
     cout << "points count: " << pointsCamera1.size() << endl;
     Mat1f inliners1 = homogenizePoints(applyMask<Point2f>(pointsCamera1, fundamentalMask));
     Mat1f inliners2 = homogenizePoints(applyMask<Point2f>(pointsCamera2, fundamentalMask));
+    /* Mat1f inliners1 = homogenizePoints(pointsCamera1); */
+    /* Mat1f inliners2 = homogenizePoints(pointsCamera2); */
     cout << "inliers1 count: " << inliners1.cols << endl;
 
     Mat1d essentialMatrix = cameraCalibration.getInstrincs().t() * fundametalMatrix * cameraCalibration.getInstrincs();
@@ -54,11 +56,15 @@ void EssentialMatrix::determineEssentialMatrix(const vector<Point2f> &pointsCame
     decomposeEssentialMatrix(essentialMatrix, inliners1, inliners2, extrincts, projectionMatrix, worldPoints);
 
     for (int i = 0; i < worldPoints.cols; i++) {
+        cout << "=====================" << endl;
+        cout << worldPoints.col(i) <<  " " << endl;
         float dividend = worldPoints.at<float>(3, i);
         worldPoints.at<float>(0, i) = worldPoints.at<float>(0, i) / dividend;
         worldPoints.at<float>(1, i) = worldPoints.at<float>(1, i) / dividend;
         worldPoints.at<float>(2, i) = worldPoints.at<float>(2, i) / dividend;
         worldPoints.at<float>(3, i) = worldPoints.at<float>(3, i) / dividend;
+
+        cout << worldPoints.col(i) << endl;
     }
 
     cout << worldPoints << endl;
@@ -155,7 +161,6 @@ int EssentialMatrix::pointsInfrontCamera(const Mat1f& inliners1,
         } else
             pointMask.push_back(0);
     }
-
     return numberOfPointsInFront;
 }
 

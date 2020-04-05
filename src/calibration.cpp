@@ -51,7 +51,6 @@ void Calibration::loadCalibration(filesystem::path filepath) {
 
     cout << "Loading calibration from file " << filepath.string().c_str() << endl;
 
-    FileStorage fs(filepath.string(), FileStorage::READ);
     cv::FileStorage fs(filepath.string(), cv::FileStorage::READ);
     cameraMatrix = fs[cameraMatrixSerName].mat();
     optimalCameraMatrix = fs[optimalMatrixSerName].mat();

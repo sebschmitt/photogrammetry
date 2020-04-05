@@ -63,9 +63,6 @@ int main(int argc, char *argv[]) {
                                                      extrincts,
                                                      projectionMatrix,
                                                      worldPoints);
-    cout << worldPoints << endl;;
-    worldPoints = worldPoints;
-    cout << worldPoints << endl;
 
     worldPoints.pop_back();
 
