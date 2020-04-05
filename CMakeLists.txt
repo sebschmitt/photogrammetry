@@ -27,6 +27,7 @@ set(SOURCES
         src/feature-matching.cpp
         src/ply-model-exporter.cpp
         src/essential-matrix.cpp
+        src/filter-masks.cpp
 )
 
 # add the files from SOURCES to the executable
