@@ -35,39 +35,21 @@ vector<T> EssentialMatrix::applyMask(const vector<T>& input,
     return output;
 }
 
-void EssentialMatrix::determineEssentialMatrix(const vector<Point2f> &pointsCamera1,
-                                               const vector<Point2f> &pointsCamera2, 
-                                               Mat1d& extrincts,
-                                               Mat1d& projectionMatrix,
-                                               Mat1f& worldPoints) {
+void EssentialMatrix::determineEssentialMatrix(const vector<Point2f>& pointsCamera1,
+    const vector<Point2f>& pointsCamera2,
+    Mat1d& extrincts,
+    Mat1d& projectionMatrix,
+    Mat1f& worldPoints) {
 
     vector<uchar> fundamentalMask;
     Mat1d fundametalMatrix = findFundamentalMat(pointsCamera1, pointsCamera2, FM_RANSAC, 0.1, 0.99, fundamentalMask);
 
-    cout << "points count: " << pointsCamera1.size() << endl;
     Mat1f inliners1 = homogenizePoints(applyMask<Point2f>(pointsCamera1, fundamentalMask));
     Mat1f inliners2 = homogenizePoints(applyMask<Point2f>(pointsCamera2, fundamentalMask));
-    /* Mat1f inliners1 = homogenizePoints(pointsCamera1); */
-    /* Mat1f inliners2 = homogenizePoints(pointsCamera2); */
-    cout << "inliers1 count: " << inliners1.cols << endl;
 
     Mat1d essentialMatrix = cameraCalibration.getInstrincs().t() * fundametalMatrix * cameraCalibration.getInstrincs();
 
     decomposeEssentialMatrix(essentialMatrix, inliners1, inliners2, extrincts, projectionMatrix, worldPoints);
-
-    for (int i = 0; i < worldPoints.cols; i++) {
-        cout << "=====================" << endl;
-        cout << worldPoints.col(i) <<  " " << endl;
-        float dividend = worldPoints.at<float>(3, i);
-        worldPoints.at<float>(0, i) = worldPoints.at<float>(0, i) / dividend;
-        worldPoints.at<float>(1, i) = worldPoints.at<float>(1, i) / dividend;
-        worldPoints.at<float>(2, i) = worldPoints.at<float>(2, i) / dividend;
-        worldPoints.at<float>(3, i) = worldPoints.at<float>(3, i) / dividend;
-
-        cout << worldPoints.col(i) << endl;
-    }
-
-    cout << worldPoints << endl;
 }
 
 
@@ -93,12 +75,13 @@ void EssentialMatrix::decomposeEssentialMatrix(const Mat1d& essentialMatrix,
 
     Mat1d currentExtrincs;
     Mat1d currentProjectionMat;
-    Mat1f currentWorldPoints(3, 4);
+    Mat1f currentWorldPoints;
+    Mat1f selectedWorldPoints;
 
+   
 
-    // TODO: fix change determineEssentalMatrix parameters
-    // TODO: fix image Points to always be float
-    // TODO: check other variable types
+    // try all rotation and translation combinations for the camera position
+    // store the combination with the most points in front of the camera in selectedWorldPoints
     for (size_t i = 0; i < rotations.size(); i++) {
         
         currentExtrincs = Mat1d(3,4);
@@ -112,10 +95,31 @@ void EssentialMatrix::decomposeEssentialMatrix(const Mat1d& essentialMatrix,
             pointsInfront = currentPointsInfront;
             extrincts = currentExtrincs;
             projectionMatrix = currentProjectionMat ;
-            worldPoints = currentWorldPoints;
+            selectedWorldPoints = currentWorldPoints;
         }
     }
-    cout << "Selected matrices with " << pointsInfront;
+    
+
+    // copy world coordinates from selectedWorldPoints to worldpoints, when the z-Index is greater than 0
+    worldPoints = Mat1f(4, pointsInfront);
+    int selectedIndex = 0;
+    int copiedIndex = 0;
+
+    for (; selectedIndex < selectedWorldPoints.cols; selectedIndex++) {
+        float dividend = selectedWorldPoints.at<float>(3, selectedIndex);
+        if (selectedWorldPoints.at<float>(2, selectedIndex) > 0 && dividend <= 0 || selectedWorldPoints.at<float>(2, selectedIndex) < 0 && dividend >= 0)
+            continue;
+
+        worldPoints.at<float>(0, copiedIndex) = selectedWorldPoints.at<float>(0, selectedIndex) / dividend;
+        worldPoints.at<float>(1, copiedIndex) = selectedWorldPoints.at<float>(1, selectedIndex) / dividend;
+        worldPoints.at<float>(2, copiedIndex) = selectedWorldPoints.at<float>(2, selectedIndex) / dividend;
+        worldPoints.at<float>(3, copiedIndex) = selectedWorldPoints.at<float>(3, selectedIndex) / dividend;
+        copiedIndex++;
+    }
+
+    cout << "Selected matrices with " << pointsInfront << " number of points in front.";
+    cout << worldPoints << endl;
+    cout << "Inliers count: " << inliners1.size() << endl;
 }
 
 
@@ -149,7 +153,10 @@ int EssentialMatrix::pointsInfrontCamera(const Mat1f& inliners1,
     projectionMatrix.convertTo(p2, CV_32FC1);
     extrincts1.convertTo(extrincts1, CV_32FC1);
 
+    cout << "Triangulating points: " << endl;
     triangulatePoints(p1, projectionMatrix, inliners1.rowRange(0, 2), inliners2.rowRange(0, 2), worldPoints);
+    cout << "Found 3d Points:" << endl;
+    cout << worldPoints << endl;
 
     int numberOfPointsInFront = 0;
     vector<int> pointMask;

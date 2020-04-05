@@ -54,6 +54,8 @@ int main(int argc, char *argv[]) {
     featureMatching.findMatches(img1, img2, imagePoints1, imagePoints2);
 
     cout << "matching successful" << endl;
+
+    cout << "compute matrices." << endl;
     EssentialMatrix essentialMatrixComputer(calb);
 
     cv::Mat1d extrincts, projectionMatrix;
@@ -63,6 +65,9 @@ int main(int argc, char *argv[]) {
                                                      extrincts,
                                                      projectionMatrix,
                                                      worldPoints);
+    cout << "done.." << endl;
+    cout << "selected worldpoints:" << endl;
+    cout << worldPoints << endl;
 
     worldPoints.pop_back();
 
