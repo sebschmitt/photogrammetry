@@ -43,6 +43,13 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
+    if (a_loadCalibration.isFound() && a_calibrationImages.isFound()) {
+        cout << "You can't use  " << a_loadCalibration.getName() << " and " << a_loadCalibration.getName() << " at the same time" << endl;
+        return -1;
+    }
+
+
+
     if (a_loadCalibration.isFound()) {
         calb.loadCalibration(filesystem::path(a_loadCalibration.getValue<string>()));
     }
