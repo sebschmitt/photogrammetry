@@ -17,17 +17,31 @@ using namespace std;
 int main(int argc, char *argv[]) {
     argparser::ArgumentParser parser("yapgt (yet another photogrammetry tool)");
 
+    /* Calibration Arguments */
     argparser::Argument a_loadCalibration("loadcalibration", "Filepath to load calibration from");
     argparser::Argument a_saveCalibration("savecalibration", "Filepath to save calibration to");
     argparser::Argument a_calibrationImages("calibrationImages", "Images for Calibration");
+    argparser::Argument a_calibrationCalibrateRow("calibrateRow", "corners row for Calibration");
+    argparser::Argument a_calibrationCalibrateColumn("calibrateColumn", "corners column for Calibration");
+
+    argparser::Argument a_matchImages("matchImages", "Images to use for matching");
+
 
     parser.addArgument(&a_loadCalibration);
     parser.addArgument(&a_saveCalibration);
     parser.addArgument(&a_calibrationImages);
+    parser.addArgument(&a_calibrationCalibrateRow);
+    parser.addArgument(&a_calibrationCalibrateColumn);
+    parser.addArgument(&a_matchImages);
 
     parser.parseArguments(argc, argv);
 
     Calibration calb = Calibration();
+
+    if (!(a_loadCalibration.isFound() || a_calibrationImages.isFound())) {
+        cout << "Neither " << a_loadCalibration.getName() << " nor " << a_loadCalibration.getName() << " was supplied" << endl;
+        return -1;
+    }
 
     if (a_loadCalibration.isFound()) {
         calb.loadCalibration(filesystem::path(a_loadCalibration.getValue<string>()));
@@ -41,20 +55,33 @@ int main(int argc, char *argv[]) {
         }
 
         // number of inner corners per chessboard row and column
-        // TODO add argument
-        unsigned int cornersRow = 6;
-        unsigned int cornersColumn = 9;
+
+        if (!a_calibrationCalibrateRow.isFound()) {
+            cout << "Argument " << a_calibrationCalibrateRow.getName() << " is required for calibration" << endl;
+            return -1;
+        }
+
+        if (!a_calibrationCalibrateColumn.isFound()) {
+            cout << "Argument " << a_calibrationCalibrateColumn.getName() << " is required for calibration" << endl;
+            return -1;
+        }
+
+        unsigned int cornersRow = a_calibrationCalibrateRow.getValue<int>();
+        unsigned int cornersColumn = a_calibrationCalibrateColumn.getValue<int>();
 
         calb.calibrate(filepaths, cv::Size(cornersColumn, cornersRow));
     }
-
-     // TODO: check if either a_loadCalibration or a_calibrationImages was found
 
     if (a_saveCalibration.isFound()) {
          calb.saveCalibration(filesystem::path(a_saveCalibration.getValue<string>()));
     }
 
-    // TODO: add further arguments
+
+    /* Prototype for later use */
+    if (a_matchImages.isFound()) {
+        for (const auto& entry : filesystem::directory_iterator(a_matchImages.getValue<string>())) {
+        }
+    }
 
     /* cv::Mat img1 = cv::imread("./resources/guitar_images/20200223_125417880_iOS.jpg"); */
     cv::Mat img1 = cv::imread("./resources/guitar_images/20200223_125427418_iOS.jpg");
