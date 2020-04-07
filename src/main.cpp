@@ -14,6 +14,7 @@
 
 using namespace std;
 
+
 int main(int argc, char *argv[]) {
     argparser::ArgumentParser parser("yapgt (yet another photogrammetry tool)");
 
@@ -35,7 +36,8 @@ int main(int argc, char *argv[]) {
     parser.addArgument(&a_matchImages);
 
     parser.parseArguments(argc, argv);
-
+    
+    // iphone test
     Calibration calb = Calibration();
 
     if (!(a_loadCalibration.isFound() || a_calibrationImages.isFound())) {
@@ -47,8 +49,6 @@ int main(int argc, char *argv[]) {
         cout << "You can't use  " << a_loadCalibration.getName() << " and " << a_loadCalibration.getName() << " at the same time" << endl;
         return -1;
     }
-
-
 
     if (a_loadCalibration.isFound()) {
         calb.loadCalibration(filesystem::path(a_loadCalibration.getValue<string>()));
@@ -83,22 +83,26 @@ int main(int argc, char *argv[]) {
          calb.saveCalibration(filesystem::path(a_saveCalibration.getValue<string>()));
     }
 
-
     /* Prototype for later use */
     if (a_matchImages.isFound()) {
         for (const auto& entry : filesystem::directory_iterator(a_matchImages.getValue<string>())) {
         }
     }
 
-    /* cv::Mat img1 = cv::imread("./resources/guitar_images/20200223_125417880_iOS.jpg"); */
-    cv::Mat img1 = cv::imread("./resources/guitar_images/20200223_125427418_iOS.jpg");
-    cv::Mat img2 = cv::imread("./resources/guitar_images/20200223_125447874_iOS.jpg");
 
-    /* cv::namedWindow("Matches", cv::WINDOW_FREERATIO); */
-    /* cv::imshow("Matches", img1); */
-    /* cv::waitKey(0); */
-    /* cv::imshow("Matches", img2); */
-    /* cv::waitKey(0); */
+
+    //TODO: replace with values from the args parser
+    string inputFolder = "./resources/chessboard_images/";
+    string outputFile = "./resources/ps43d.ply";
+
+    // TODO: validate file format
+    std::vector<filesystem::path> inputImagePaths;
+    for (const auto& entry : filesystem::directory_iterator(inputFolder)) {
+        inputImagePaths.push_back(entry.path());
+    }
+
+    cv::Mat img1 = cv::imread(inputImagePaths.at(0).string());
+    cv::Mat img2 = cv::imread(inputImagePaths.at(1).string());
 
     vector<cv::Point2f> imagePoints1;
     vector<cv::Point2f> imagePoints2;
@@ -115,12 +119,10 @@ int main(int argc, char *argv[]) {
                                                      extrincts,
                                                      projectionMatrix,
                                                      worldPoints);
-    cout << worldPoints << endl;;
-    worldPoints = worldPoints;
-    cout << worldPoints << endl;
-
     worldPoints.pop_back();
 
     PlyModelExporter exporter;
-    exporter.exportPointCloud("./resources/test.ply", worldPoints);
+    exporter.exportPointCloud(outputFile, worldPoints);
+
+    return 0;
 }
