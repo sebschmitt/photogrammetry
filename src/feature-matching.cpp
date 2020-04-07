@@ -92,7 +92,7 @@ void FeatureMatching::filterMatches(const vector<KeyPoint>& keypoints1,
     
     // max distance for matches is 25% of the max distance / image diagonal
     double distanceLimit = 0.25f * sqrt(pow(imageSize.height, 2) + pow(imageSize.width, 2));
-    double maxHeightDifference = 0.05f * imageSize.height;
+    double maxHeightDifference = 0.05 * imageSize.height;
     double minHeightDifference = 100;
 
 
