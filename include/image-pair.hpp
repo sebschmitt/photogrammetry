@@ -6,21 +6,6 @@
 #include <string>
 #include <vector>
 
-
-// interface definition
-class ImagePair {
-
-public:
-	virtual cv::Mat getPreviousTransform();
-	virtual cv::Mat getPreviousWorldPoints();
-	virtual std::vector<uchar> getCommonPointsMaks();
-
-	virtual void setResults(cv::Mat transform, cv::Mat projection, cv::Mat worldPoints);
-	virtual ~ImagePair();
-	virtual ImagePairIterator createIterator();
-};
-
-
 class ImagePairIterator {
 public:
 	virtual ~ImagePairIterator();
@@ -29,6 +14,24 @@ public:
 	virtual void next();
 	virtual void first();
 };
+
+// interface definition
+class ImagePair {
+
+public:
+	/* virtual ~ImagePair() = 0; */
+    virtual cv::Mat getLeftImage() = 0;
+    virtual cv::Mat getRightImage() = 0;
+    virtual std::vector<cv::Point2f> getLeftImagePoints() = 0;
+    virtual std::vector<cv::Point2f> getRightImagePoints() = 0;
+	virtual cv::Mat getPreviousTransform() = 0;
+	virtual cv::Mat getPreviousWorldPoints() = 0;
+	virtual std::vector<uchar> getCommonPointsMaks() = 0;
+	virtual void setResults(cv::Mat transform, cv::Mat projection, cv::Mat worldPoints) = 0;
+	virtual ImagePairIterator createIterator() = 0;
+};
+
+
 
 
 #endif

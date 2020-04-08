@@ -3,31 +3,48 @@
 
 #include "image-pair.hpp"
 
+
 class ImageNode : ImagePair {
 private:
-	
-	ImagePair *prevPair;
-	ImagePair *nextPair;
+	ImageNode *prevNode;
+	ImageNode *nextNode;
 
 	std::string leftImageName;
 	std::string rightImageName;
+
 	cv::Mat leftImage;
 	cv::Mat rightImage;
 
 	std::vector<Point2f> leftImagePoints;
 	std::vector<Point2f> rightImagePoints;
-
-
-	cv::Mat projection;
-	cv::Mat worldPoints;
-
-	std::vector<uchar> mask;
+    sdt::vector<unsigned int> overlappingPointIndexes;
 		
 public:
-	void setCameraTransform(cv::Mat transform);
-	void setProjectionMat(cv::Mat projection);
-	void setWorldPoints(cv::Mat worldPoints);
-		
+    friend class LinkedPairList;
+
+    ImageNode(cv::Mat leftImage, cv::Mat rightImage) { }
+	~ImageNode();
+
+	const std::vector<Point2f> &getLeftImagePoints(); 
+	const std::vector<Point2f> &getRightImagePoints();
+    const sdt::vector<unsigned int> &getOverlappingPointIndexes();
+
+    
 
 };
+
+
+
+class LinkedPairList {
+private:
+    ImageNode *head;
+    ImageNode *tail;
+    
+public:
+
+    void append();
+    void prepend();
+
+	ImagePairIterator createIterator();
+}
 #endif // !YAPGT_IMAGE_NODE_H
