@@ -26,6 +26,7 @@ int main(int argc, char *argv[]) {
     argparser::Argument a_calibrationCalibrateColumn("calibrateColumn", "corners column for Calibration");
 
     argparser::Argument a_matchImages("matchImages", "Images to use for matching");
+    argparser::Argument a_outFile("out", "Output file");
 
 
     parser.addArgument(&a_loadCalibration);
@@ -34,6 +35,7 @@ int main(int argc, char *argv[]) {
     parser.addArgument(&a_calibrationCalibrateRow);
     parser.addArgument(&a_calibrationCalibrateColumn);
     parser.addArgument(&a_matchImages);
+    parser.addArgument(&a_outFile);
 
     parser.parseArguments(argc, argv);
     
@@ -91,13 +93,19 @@ int main(int argc, char *argv[]) {
 
 
 
-    //TODO: replace with values from the args parser
-    string inputFolder = "./resources/chessboard_images/";
-    string outputFile = "./resources/ps43d.ply";
+    if (!a_matchImages.isFound()) { // TODO proper handling?
+        cout << "Argument " << a_matchImages.getName() << " was not found" << endl;
+        return -1;
+    }
+
+    if (!a_outFile.isFound()) { // TODO proper handling?
+        cout << "Argument " << a_outFile.getName() << " was not found" << endl;
+        return -1;
+    }
 
     // TODO: validate file format
     std::vector<filesystem::path> inputImagePaths;
-    for (const auto& entry : filesystem::directory_iterator(inputFolder)) {
+    for (const auto& entry : filesystem::directory_iterator(a_matchImages.getValue<string>())) {
         inputImagePaths.push_back(entry.path());
     }
 
@@ -122,7 +130,7 @@ int main(int argc, char *argv[]) {
     worldPoints.pop_back();
 
     PlyModelExporter exporter;
-    exporter.exportPointCloud(outputFile, worldPoints);
+    exporter.exportPointCloud(a_outFile.getValue<string>(), worldPoints);
 
     return 0;
 }
