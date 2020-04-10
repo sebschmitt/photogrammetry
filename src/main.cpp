@@ -9,6 +9,7 @@
 #include <iostream>
 
 #include "argparser.h"
+#include <sequence-matcher.hpp>
 
 
 
@@ -16,6 +17,16 @@ using namespace std;
 
 
 int main(int argc, char *argv[]) {
+
+    // string testFolder = "./resources/ps4_controller";
+    string testFolder = "./resources/pokemon_ball";
+
+
+    SequenceMatcher sequenceMatcher;
+    sequenceMatcher.generateSequence(testFolder);
+
+
+
     argparser::ArgumentParser parser("yapgt (yet another photogrammetry tool)");
 
     /* Calibration Arguments */
