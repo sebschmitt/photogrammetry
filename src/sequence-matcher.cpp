@@ -19,12 +19,15 @@ struct ImageContainer {
     cv::Mat image;
     std::vector<cv::KeyPoint> keypoints;
     cv::Mat descriptors;
-
     // keypoint index, image_index, key point index
     std::map<size_t, std::map<size_t, size_t>> keypointMatches;
 };
 
+
 void SequenceMatcher::generateSequence(std::filesystem::path folderPath) {
+
+    ImageContainer leftBestMatch, rightBestMatch;
+    int bestMatchCount = 0;
 
 	assert(std::filesystem::exists(folderPath));
 	assert(std::filesystem::is_directory(folderPath));
@@ -155,10 +158,16 @@ void SequenceMatcher::generateSequence(std::filesystem::path folderPath) {
             cv::imwrite(imgName, canvas);
         }
     }
-
     std::cout << "Done" << std::endl;
 
+    std::cout << "Building sequence..." << std::endl;
 
 
+    //int matchCount = 0;
+    //size_t leftIndex, rightIndex;
+
+    //for (size_t imageIndex = 0; imageIndex < images.size(); imageIndex++) {
+    //    
+    //}
 
 }
