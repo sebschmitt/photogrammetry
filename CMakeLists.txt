@@ -42,5 +42,3 @@ set_target_properties(yapgt PROPERTIES
         CXX_STANDARD_REQUIRED ON
         CXX_EXTENSIONS OFF
 )
-
-file(COPY resources DESTINATION ${CMAKE_BINARY_DIR})

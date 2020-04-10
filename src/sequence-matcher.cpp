@@ -1,7 +1,7 @@
 #include "sequence-matcher.hpp"
 
 #include <opencv2/core.hpp>
-#include <opencv2\imgcodecs.hpp>
+#include <opencv2/imgcodecs.hpp>
 #include <opencv2/features2d.hpp>
 #include <opencv2/xfeatures2d.hpp>
 
@@ -11,8 +11,8 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#include <opencv2\calib3d.hpp>
-#include <opencv2\highgui.hpp>
+#include <opencv2/calib3d.hpp>
+#include <opencv2/highgui.hpp>
 
 struct ImageContainer {
     std::string name;
