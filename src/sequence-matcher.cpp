@@ -1,5 +1,8 @@
 #include "sequence-matcher.hpp"
 
+#include "image-pair.hpp"
+#include "image.hpp"
+
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/features2d.hpp>
@@ -14,14 +17,6 @@
 #include <opencv2/calib3d.hpp>
 #include <opencv2/highgui.hpp>
 
-struct ImageContainer {
-    std::string name;
-    cv::Mat image;
-    std::vector<cv::KeyPoint> keypoints;
-    cv::Mat descriptors;
-    // keypoint index, image_index, key point index
-    std::map<size_t, std::map<size_t, size_t>> keypointMatches;
-};
 
 
 void SequenceMatcher::generateSequence(std::filesystem::path folderPath) {
@@ -162,12 +157,42 @@ void SequenceMatcher::generateSequence(std::filesystem::path folderPath) {
 
     std::cout << "Building sequence..." << std::endl;
 
+    Scene::Image currentLeft, currentRight;
 
-    //int matchCount = 0;
-    //size_t leftIndex, rightIndex;
+    currentLeft = createImageFromContainer(images.at(0));
+    currentRight = createImageFromContainer(images.at(1));
 
-    //for (size_t imageIndex = 0; imageIndex < images.size(); imageIndex++) {
-    //    
-    //}
+    Scene::ImagePairSequence sequence;
 
+
+    
+    // sequence.append(Scene::ImagePair(currentLeft,currentRight, ))
+
+}
+
+// vector<size_t> getMatchIndexes(size_t leftImage, size_t rightImage, std::map < size_t, std::map<size_t, size_t> matchMappings) {
+
+// }
+
+void SequenceMatcher::getKeypointIndexes(const ImageContainer& leftImageContainer, const size_t& rightImageIndex, std::vector<size_t>& leftKeypointIndexes, std::vector<size_t> rightKeypointIndexes) {
+
+    for (size_t leftKeypointIndex = 0; leftKeypointIndex < leftImageContainer.keypointMatches.size(); leftKeypointIndex++) {
+        // iterate over possible keypoint indexes for the left image, and check 
+        if (leftImageContainer.keypointMatches.count(leftKeypointIndex) && leftImageContainer.keypointMatches.at(leftKeypointIndex).count(rightImageIndex)) {
+            leftKeypointIndexes.push_back(leftKeypointIndex);
+            rightKeypointIndexes.push_back(leftImageContainer.keypointMatches.at(leftKeypointIndex).at(rightImageIndex));
+        }
+    }
+}
+
+Scene::Image SequenceMatcher::createImageFromContainer(ImageContainer container) {
+    Scene::Image image;
+    image.image = container.image;
+    image.name = container.name;
+
+    for (auto& kp : container.keypoints) {
+        image.imagePoints.push_back(kp.pt);
+    }
+
+    return image;
 }

@@ -2,7 +2,7 @@
 // Created by Sebastian Schmitt on 08.04.2020.
 //
 
-#include "image-pair.h"
+#include "image-pair.hpp"
 
 #include <utility>
 
