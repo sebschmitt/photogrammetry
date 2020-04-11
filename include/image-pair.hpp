@@ -21,8 +21,8 @@ namespace Scene {
     private:
         Image leftImage;
         Image rightImage;
-        ImagePair* prevPair;
-        ImagePair* nextPair;
+        ImagePair* prevPair = nullptr;
+        ImagePair* nextPair = nullptr;
         
         // std::vector<std::tuple<cv::Point2f, cv::Point2f>> matches;
         std::vector<size_t> matchedKeypointsLeft;

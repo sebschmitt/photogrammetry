@@ -19,7 +19,7 @@ struct ImageContainer {
 class SequenceMatcher {
 
 private:
-	void getKeypointIndexes(const ImageContainer& leftImageContainer, const size_t& rightImageIndex, std::vector<size_t>& leftKeypointIndexes, std::vector<size_t> rightKeypointIndexes);
+	void getKeypointIndexes(const ImageContainer& leftImageContainer, const size_t& rightImageIndex, std::vector<size_t>& leftKeypointIndexes, std::vector<size_t> &rightKeypointIndexes);
 	Scene::Image createImageFromContainer(ImageContainer container);
 
 public:

@@ -4,7 +4,7 @@
 #include <exception>
 
 void Scene::SceneSequence::append(ImagePair* node) {
-	if (head != nullptr) {
+	if (head == nullptr) {
 		head = node;
 		tail = node;
 	}
@@ -12,6 +12,7 @@ void Scene::SceneSequence::append(ImagePair* node) {
 		if (node->getLeftImageName() != tail->getRightImageName())
 			throw std::runtime_error("The appended image pair's left image is not equal to the tail's right image.");
 
+		tail->nextPair = node;
 		node->prevPair = tail;
 		tail = node;
 	}
@@ -19,16 +20,18 @@ void Scene::SceneSequence::append(ImagePair* node) {
 
 
 void Scene::SceneSequence::prepend(ImagePair* node) {
-	if (head != nullptr) {
+	if (head == nullptr) {
 		head = node;
 		tail = node;
 	}
+	else {
+		if (node->getRightImageName() != head->getLeftImageName())
+			throw std::runtime_error("The appended image pair's right image is not equal to the head's left image.");
 
-	if (node->getRightImageName() != head->getLeftImageName())
-		throw std::runtime_error("The appended image pair's right image is not equal to the head's left image.");
-
-	node->nextPair = head;
-	head = node;
+		node->nextPair = head;
+		head->prevPair = node;
+		head = node;
+	}
 }
 
 Scene::ImagePair Scene::SceneSequence::at(size_t index) {

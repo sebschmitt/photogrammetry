@@ -11,8 +11,8 @@
 namespace Scene {
     class SceneSequence {
     private:
-        ImagePair *head;
-        ImagePair *tail;
+        ImagePair *head = nullptr;
+        ImagePair *tail = nullptr;
         // ImagePair *currentNode;
     public:
         void append(ImagePair *node);

@@ -11,7 +11,7 @@
 namespace Scene {
     class ImageSequenceIterator : public Iterator<ImagePair> {
     private:
-		ImagePair* nextNode;
+		ImagePair* nextNode = nullptr;
 
 	public:
 		ImageSequenceIterator(ImagePair* head);

@@ -15,13 +15,13 @@ namespace Scene {
 
         */
         ImagePair::ImagePair(Image leftImage, Image rightImage, std::vector<size_t> matchedKeypointsLeft, std::vector<size_t> matchedKeypointsRight) {
-        this->leftImage = std::move(leftImage);
-        this->rightImage = std::move(rightImage);
+            this->leftImage = leftImage; //std::move(leftImage);
+            this->rightImage = rightImage;// std::move(rightImage);
         this->prevPair = nullptr;
         this->nextPair = nullptr;
 
-        this->matchedKeypointsLeft = std::move(matchedKeypointsLeft);
-        this->matchedKeypointsRight = std::move(matchedKeypointsRight);
+        this->matchedKeypointsLeft = matchedKeypointsLeft;//std::move(matchedKeypointsLeft);
+        this->matchedKeypointsRight = matchedKeypointsRight;// std::move(matchedKeypointsRight);
 
         // create mapping of keypoint to the respective match only for the right image
         for (size_t index = 0; index < matchedKeypointsRight.size(); index++) {

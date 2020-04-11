@@ -170,9 +170,9 @@ Scene::SceneSequence SequenceMatcher::generateSequence(std::filesystem::path fol
         currentRight = createImageFromContainer(images.at(imageIndex+1));
 
         this->getKeypointIndexes(images.at(imageIndex), imageIndex + 1, leftKeypointMatches, rightKeypointMatches);
-        
 
-{}
+
+        //Scene::ImagePair* pair = new Scene::ImagePair(currentLeft, currentRight, leftKeypointMatches, rightKeypointMatches);
         sequence.append(new Scene::ImagePair(currentLeft, currentRight, leftKeypointMatches, rightKeypointMatches));
     }
 
@@ -183,13 +183,14 @@ Scene::SceneSequence SequenceMatcher::generateSequence(std::filesystem::path fol
 
 // }
 
-void SequenceMatcher::getKeypointIndexes(const ImageContainer& leftImageContainer, const size_t& rightImageIndex, std::vector<size_t>& leftKeypointIndexes, std::vector<size_t> rightKeypointIndexes) {
+void SequenceMatcher::getKeypointIndexes(const ImageContainer& leftImageContainer, const size_t& rightImageIndex, std::vector<size_t>& leftKeypointIndexes, std::vector<size_t>& rightKeypointIndexes) {
 
-    for (size_t leftKeypointIndex = 0; leftKeypointIndex < leftImageContainer.keypointMatches.size(); leftKeypointIndex++) {
-        // iterate over possible keypoint indexes for the left image, and check 
-        if (leftImageContainer.keypointMatches.count(leftKeypointIndex) && leftImageContainer.keypointMatches.at(leftKeypointIndex).count(rightImageIndex)) {
-            leftKeypointIndexes.push_back(leftKeypointIndex);
-            rightKeypointIndexes.push_back(leftImageContainer.keypointMatches.at(leftKeypointIndex).at(rightImageIndex));
+
+	// iterate over each map entry and collect all keypoints, who have a match with righImageIndex
+    for (auto kpToImg : leftImageContainer.keypointMatches) {
+        if (kpToImg.second.count(rightImageIndex) > 0) {
+            leftKeypointIndexes.push_back(kpToImg.first);
+            rightKeypointIndexes.push_back(kpToImg.second.at(rightImageIndex));
         }
     }
 }
