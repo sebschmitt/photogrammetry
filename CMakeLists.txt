@@ -20,15 +20,20 @@ include_directories(include)
 # add_subdirectory(third-party/json)
 
 # create the variable SOURCES, which is a list of all source and header files
-set(SOURCES
+set(SOURCES 
         src/CameraCalibration.cpp
         src/calibration.cpp
         src/main.cpp
         src/feature-matching.cpp
         src/ply-model-exporter.cpp
         src/essential-matrix.cpp
-        include/argparser.h src/argparser.cpp
-        src/reconstruction.cpp)
+        src/argparser.cpp
+        src/reconstruction.cpp
+        src/image-pair.cpp 
+        src/argparser.cpp
+        src/sequence-matcher.cpp
+        src/scene-sequence.cpp
+        src/imagepair-sequence-iterator.cpp)
 
 # add the files from SOURCES to the executable
 add_executable(yapgt ${SOURCES})
@@ -42,5 +47,3 @@ set_target_properties(yapgt PROPERTIES
         CXX_STANDARD_REQUIRED ON
         CXX_EXTENSIONS OFF
 )
-
-file(COPY resources DESTINATION ${CMAKE_BINARY_DIR})
