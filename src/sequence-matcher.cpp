@@ -1,5 +1,9 @@
 #include "sequence-matcher.hpp"
 
+#include "image-pair.hpp"
+#include "image.hpp"
+#include "scene-sequence.hpp"
+
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/features2d.hpp>
@@ -14,17 +18,9 @@
 #include <opencv2/calib3d.hpp>
 #include <opencv2/highgui.hpp>
 
-struct ImageContainer {
-    std::string name;
-    cv::Mat image;
-    std::vector<cv::KeyPoint> keypoints;
-    cv::Mat descriptors;
-    // keypoint index, image_index, key point index
-    std::map<size_t, std::map<size_t, size_t>> keypointMatches;
-};
 
 
-void SequenceMatcher::generateSequence(std::filesystem::path folderPath) {
+Scene::SceneSequence SequenceMatcher::generateSequence(std::filesystem::path folderPath) {
 
     ImageContainer leftBestMatch, rightBestMatch;
     int bestMatchCount = 0;
@@ -67,7 +63,8 @@ void SequenceMatcher::generateSequence(std::filesystem::path folderPath) {
     // only continue with the programm, when we at least have 2 images
     if (images.size() < 2) {
         std::cerr << "Less than 2 images have been loaded. At least 2 images are necessary. Aborting Programm.";
-        return;
+        //TODO: abort
+        // return 1;
     }
 
 
@@ -163,11 +160,49 @@ void SequenceMatcher::generateSequence(std::filesystem::path folderPath) {
     std::cout << "Building sequence..." << std::endl;
 
 
-    //int matchCount = 0;
-    //size_t leftIndex, rightIndex;
+    Scene::SceneSequence sequence = Scene::SceneSequence();
 
-    //for (size_t imageIndex = 0; imageIndex < images.size(); imageIndex++) {
-    //    
-    //}
+    for (size_t imageIndex=0; imageIndex < images.size()-1; imageIndex++) {
+        Scene::Image currentLeft, currentRight;
 
+        std::vector<size_t> leftKeypointMatches, rightKeypointMatches;
+        currentLeft = createImageFromContainer(images.at(imageIndex));
+        currentRight = createImageFromContainer(images.at(imageIndex+1));
+
+        this->getKeypointIndexes(images.at(imageIndex), imageIndex + 1, leftKeypointMatches, rightKeypointMatches);
+
+
+        //Scene::ImagePair* pair = new Scene::ImagePair(currentLeft, currentRight, leftKeypointMatches, rightKeypointMatches);
+        sequence.append(new Scene::ImagePair(currentLeft, currentRight, leftKeypointMatches, rightKeypointMatches));
+    }
+
+    return sequence;
+}
+
+// vector<size_t> getMatchIndexes(size_t leftImage, size_t rightImage, std::map < size_t, std::map<size_t, size_t> matchMappings) {
+
+// }
+
+void SequenceMatcher::getKeypointIndexes(const ImageContainer& leftImageContainer, const size_t& rightImageIndex, std::vector<size_t>& leftKeypointIndexes, std::vector<size_t>& rightKeypointIndexes) {
+
+
+	// iterate over each map entry and collect all keypoints, who have a match with righImageIndex
+    for (auto kpToImg : leftImageContainer.keypointMatches) {
+        if (kpToImg.second.count(rightImageIndex) > 0) {
+            leftKeypointIndexes.push_back(kpToImg.first);
+            rightKeypointIndexes.push_back(kpToImg.second.at(rightImageIndex));
+        }
+    }
+}
+
+Scene::Image SequenceMatcher::createImageFromContainer(ImageContainer container) {
+    Scene::Image image;
+    image.image = container.image;
+    image.name = container.name;
+
+    for (auto& kp : container.keypoints) {
+        image.imagePoints.push_back(kp.pt);
+    }
+
+    return image;
 }
