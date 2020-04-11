@@ -126,5 +126,13 @@ namespace Scene {
 		}
 		return foundWorldPoints;
 	}
+
+    std::string ImagePair::getLeftImageName() {
+        return leftImage.name;
+    }
+
+    std::string ImagePair::getRightImageName() {
+        return rightImage.name;
+    }
 }
 

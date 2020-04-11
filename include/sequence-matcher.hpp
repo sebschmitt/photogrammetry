@@ -2,6 +2,7 @@
 #define YAPGT_SEQUENCE_MATCHER_H
 
 #include "image-pair.hpp"
+#include "scene-sequence.hpp"
 
 #include <filesystem>
 #include <vector>
@@ -24,8 +25,7 @@ private:
 public:
     //SequenceMatcher();
 
-    // TODO: change return value
-    void generateSequence(std::filesystem::path folderpath);
+    Scene::SceneSequence generateSequence(std::filesystem::path folderpath);
  };
 
 

@@ -2,6 +2,7 @@
 
 #include "image-pair.hpp"
 #include "image.hpp"
+#include "scene-sequence.hpp"
 
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
@@ -19,7 +20,7 @@
 
 
 
-void SequenceMatcher::generateSequence(std::filesystem::path folderPath) {
+Scene::SceneSequence SequenceMatcher::generateSequence(std::filesystem::path folderPath) {
 
     ImageContainer leftBestMatch, rightBestMatch;
     int bestMatchCount = 0;
@@ -62,7 +63,8 @@ void SequenceMatcher::generateSequence(std::filesystem::path folderPath) {
     // only continue with the programm, when we at least have 2 images
     if (images.size() < 2) {
         std::cerr << "Less than 2 images have been loaded. At least 2 images are necessary. Aborting Programm.";
-        return;
+        //TODO: abort
+        // return 1;
     }
 
 
@@ -157,17 +159,24 @@ void SequenceMatcher::generateSequence(std::filesystem::path folderPath) {
 
     std::cout << "Building sequence..." << std::endl;
 
-    Scene::Image currentLeft, currentRight;
 
-    currentLeft = createImageFromContainer(images.at(0));
-    currentRight = createImageFromContainer(images.at(1));
+    Scene::SceneSequence sequence = Scene::SceneSequence();
 
-    Scene::ImagePairSequence sequence;
+    for (size_t imageIndex=0; imageIndex < images.size()-1; imageIndex++) {
+        Scene::Image currentLeft, currentRight;
 
+        std::vector<size_t> leftKeypointMatches, rightKeypointMatches;
+        currentLeft = createImageFromContainer(images.at(imageIndex));
+        currentRight = createImageFromContainer(images.at(imageIndex+1));
 
-    
-    // sequence.append(Scene::ImagePair(currentLeft,currentRight, ))
+        this->getKeypointIndexes(images.at(imageIndex), imageIndex + 1, leftKeypointMatches, rightKeypointMatches);
+        
 
+{}
+        sequence.append(new Scene::ImagePair(currentLeft, currentRight, leftKeypointMatches, rightKeypointMatches));
+    }
+
+    return sequence;
 }
 
 // vector<size_t> getMatchIndexes(size_t leftImage, size_t rightImage, std::map < size_t, std::map<size_t, size_t> matchMappings) {

@@ -9,12 +9,15 @@
 
 #include <opencv2/core.hpp>
 #include <map>
+#include <string>
 #include <tuple>
 #include <vector>
 
 namespace Scene {
     class ImagePair {
-        // friend ImagePairSequence;
+        friend class SceneSequence;
+        friend class ImageSequenceIterator;
+
     private:
         Image leftImage;
         Image rightImage;
@@ -42,6 +45,8 @@ namespace Scene {
         std::map<size_t, cv::Point3f> getMatchingWorldPoints(std::vector<size_t> reconstructedMatchIndixes);
         std::map<size_t, cv::Point3f> getWorldPointsFromRightKeypoints(std::vector<size_t> rightKeypointIndixes);
 
+        std::string getLeftImageName();
+        std::string getRightImageName();
         cv::Mat getLeftImage();
         cv::Mat getRightImage();
         cv::Mat& getProjection();
@@ -49,17 +54,6 @@ namespace Scene {
         cv::Mat& getWorldPoints();
 
         void setReconstruction(cv::Mat projection, cv::Mat transform, cv::Mat worldPoints, std::vector<uchar> reconstructionMask);
-    };
-
-    class ImagePairSequence {
-        ImagePair* head;
-        ImagePair* tail;
-
-    public:
-        void append(Image image); 
-        const ImagePair& first();
-        const ImagePair& last();
-        const ImagePair& at(size_t index);
     };
 
 
