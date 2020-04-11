@@ -27,7 +27,10 @@ set(SOURCES
         src/feature-matching.cpp
         src/ply-model-exporter.cpp
         src/essential-matrix.cpp
-        include/argparser.h src/argparser.cpp include/image-pair.h include/image.h src/image-pair.cpp include/scene-sequence.h include/iterator.h include/ImagePairSequenceIterator.h)
+        src/argparser.cpp
+        src/image-pair.cpp 
+        src/argparser.cpp
+        src/sequence-matcher.cpp)
 
 # add the files from SOURCES to the executable
 add_executable(yapgt ${SOURCES})
@@ -41,5 +44,3 @@ set_target_properties(yapgt PROPERTIES
         CXX_STANDARD_REQUIRED ON
         CXX_EXTENSIONS OFF
 )
-
-file(COPY resources DESTINATION ${CMAKE_BINARY_DIR})
