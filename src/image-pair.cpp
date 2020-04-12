@@ -160,6 +160,7 @@ namespace Scene {
 	std::map<size_t, cv::Point3f> ImagePair::getMatchingWorldPoints(std::vector<size_t> reconstructedMatchIndixes) {
 
 		// setReconstruction must be called before this function is called
+		// TODO: FIX THIS, must be called later
 		assert(!matchIdxToWorldPoint.empty());
 
 		std::vector<size_t> leftKeypointIndixes;
