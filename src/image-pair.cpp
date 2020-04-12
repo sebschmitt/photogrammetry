@@ -101,7 +101,7 @@ namespace Scene {
 	// reconstructionMask is a list of 0 and 1, indicating which elements from the Match vectors have been used
 	void ImagePair::setReconstruction(cv::Mat projection, cv::Mat transform, cv::Mat worldPoints, std::vector<uchar> reconstructionMask) {
 		// TODO: check if projection sizes are correct
-		assert(projection.cols == 4 && projection.rows == 4);
+		assert(projection.cols == 4 && projection.rows == 3);
 		assert(transform.cols == 4 && transform.rows == 4);
 		assert(worldPoints.rows == 4);
 
@@ -110,12 +110,14 @@ namespace Scene {
 		assert(worldPoints.type() == CV_32FC1);
 
 		assert(reconstructionMask.size() == matchedKeypointsLeft.size());
+		assert(reconstructionMask.size() == matchedKeypointsRight.size());
 
-		this->projection = std::move(projection);
-		this->projection = std::move(tranform);
+		this->projection = projection;//std::move(projection);
+		this->tranform = transform;//std::move(tranform);
 
 
 		// normalize found world points and copy them
+		// TODO: remove later
 		this->worldPoints = cv::Mat1f(3, worldPoints.cols);
 		for (size_t i = 0; i < worldPoints.cols; i++) {
 			float divisor = worldPoints.at<float>(3, i);
@@ -125,12 +127,11 @@ namespace Scene {
 			this->worldPoints.at<float>(2, i) = worldPoints.at<float>(2, i) / divisor;
 		}
 
-
 		// create mapping from keypointIndex to worldPoint
 		size_t worldPointIndex = 0;
 		for (size_t matchIndex = 0; matchIndex < reconstructionMask.size(); matchIndex++) {
 			if (reconstructionMask.at(matchIndex)) {
-				assert(worldPointIndex < worldPoints.cols);
+				// assert(worldPointIndex < worldPoints.cols);
 
 				matchIdxToWorldPoint[matchIndex] = worldPointIndex;
 				worldPointIndex++;
