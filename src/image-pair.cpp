@@ -30,7 +30,7 @@ namespace Scene {
 		}
 	}
 
-	ImagePair::ImagePair(Image leftImage, Image rightImage, std::vector<size_t> matchedKeypointsLeft, std::vector<size_t> matchedKeypointsRight, Calibration cameracalibration) {
+	ImagePair::ImagePair(Image leftImage, Image rightImage, std::vector<size_t> matchedKeypointsLeft, std::vector<size_t> matchedKeypointsRight, Calibration cameraCalibration) {
 		this->leftImage = leftImage; //std::move(leftImage);
 		this->rightImage = rightImage;// std::move(rightImage);
 		this->prevPair = nullptr;
@@ -44,55 +44,57 @@ namespace Scene {
 			rightKeypointsToMatch[matchedKeypointsRight[index]] = index;
 		}
 
+		this->cameraCalibration = cameraCalibration;
+
 	}
 
-	cv::Mat ImagePair::getLeftImage() {
+	cv::Mat &ImagePair::getLeftImage() {
 		return this->leftImage.image;
 	}
 
-	cv::Mat ImagePair::getRightImage() {
+	cv::Mat &ImagePair::getRightImage() {
 		return this->rightImage.image;
 	}
 
-	std::vector<cv::Point2f> ImagePair::getLeftPoints() {
+	std::vector<cv::Point2f> &ImagePair::getLeftPoints() {
 		return this->leftImage.imagePoints;
 	}
 
-	std::vector<cv::Point2f> ImagePair::getRightPoints() {
+	std::vector<cv::Point2f> &ImagePair::getRightPoints() {
 		return this->rightImage.imagePoints;
 	}
 
-	cv::Mat& ImagePair::getProjection() {
+	cv::Mat ImagePair::getProjection() {
 		return this->projection;
 	}
 
-	cv::Mat& ImagePair::getWorldPoints() {
+	cv::Mat &ImagePair::getWorldPoints() {
 		return this->worldPoints;
 	}
 
-	const cv::Mat& ImagePair::getPreviousTransform() {
+	const cv::Mat ImagePair::getPreviousTransform() {
 		if (prevPair == nullptr) {
+			// throw std::underflow_error("This pair does not have a previous tranformation");
 			return cv::Mat::eye(cv::Size(4, 4), CV_64FC1);
 		}
 
 		return prevPair->getTransform();
 	}
 
-	const cv::Mat& ImagePair::getPreviousProjection() {
+	cv::Mat ImagePair::getPreviousProjection() {
 		if (prevPair == nullptr) {
-			if (this->cameraCalibration == nullptr)
-				throw std::runtime_error("An image pair without a previous pair requires the camera calibration to be set explicitly.");
-			return cameraCalibration->getCameraMatrix() * cv::Mat::eye(3, 4, CV_64FC1);
+			// if (this->cameraCalibration == nullptr)
+			//	throw std::runtime_error("An image pair without a previous pair requires the camera calibration to be set explicitly.");
+			return cameraCalibration.getCameraMatrix() * cv::Mat::eye(3, 4, CV_64FC1);
 		}
-		return projection;
+		return prevPair->getProjection();
 	}
 
-	bool ImagePair::isFirstImagePair()
-	{
+	bool ImagePair::isFirstImagePair() {
 		return prevPair == nullptr;
 	}
 
-	cv::Mat& ImagePair::getTransform() {
+	cv::Mat ImagePair::getTransform() {
 		return this->tranform;
 	}
 

@@ -6,25 +6,27 @@
 #include "iostream"
 
 
-SceneReconstructor::SceneReconstructor(Calibration calbiration) {
+SceneReconstructor::SceneReconstructor(Calibration calibration) {
 	this->calibration = calibration;
 }
 
-cv::Mat SceneReconstructor::getProjection(const cv::Mat &globalRotation, const cv::Mat &globalTranslation, int scale) {
-	cv::Mat rAndT = cv::Mat(3, 4, CV_64FC1);
-	cv::hconcat(globalRotation.t(), -globalRotation.t() * (globalTranslation * scale), rAndT);
-	return calibration.getCameraMatrix() * rAndT;
+cv::Mat SceneReconstructor::getProjection(const cv::Mat &globalRotation, const cv::Mat &globalTranslation) {
+	cv::Mat projection = cv::Mat(3, 4, CV_64FC1);
+
+	// globalRotation.copyTo(projection(cv::Range(0, 3), cv::Range(0, 3)));
+	// globalTranslation.copyTo(projection(cv::Range(0, 3), cv::Range(3, 4)));
+
+	cv::hconcat(globalRotation.t(), -globalRotation.t() * globalTranslation, projection);
+	return calibration.getCameraMatrix() * projection;
 }
 
 // create a 4x4 transform matrix using the given rotation and translation.
 // the resulting matrix has the form; [ R; 0 | t; 1]
 cv::Mat SceneReconstructor::combineToTransformation(const cv::Mat &rotation, const cv::Mat &translation) {
-	cv::Mat1d t = cv::Mat1d(3, 4);
+	cv::Mat t = cv::Mat::eye(4, 4, CV_64FC1);
+	rotation.copyTo(t(cv::Range(0, 3), cv::Range(0, 3)));
+	translation.copyTo(t(cv::Range(0, 3), cv::Range(3, 4)));
 
-	cv::hconcat(rotation, translation, t);
-	t.push_back(std::vector<double>{0, 0, 0, 1});
-
-	assert(t.cols == 4 && t.rows == 4);
 	return t;
 }
 
@@ -35,7 +37,11 @@ void SceneReconstructor::getFromTransformation(const cv::Mat& transformation, cv
 	translation = cv::Mat1d(1, 3);
 	
 	transformation(cv::Range(0, 3), cv::Range(0, 3)).copyTo(rotation);
-	transformation(cv::Range(3, 3), cv::Range(0, 3)).copyTo(translation);
+	transformation(cv::Range(0, 3), cv::Range(3, 4)).copyTo(translation);
+
+	std::cout << transformation << std::endl;
+	std::cout << rotation << std::endl;
+	std::cout << translation << std::endl;
 }
 
 void SceneReconstructor::reconstructScenes(Iterator<Scene::ImagePair>* pairSequence) {
@@ -50,33 +56,27 @@ void SceneReconstructor::reconstructScenes(Iterator<Scene::ImagePair>* pairSeque
 		// compute the essential matrix
 		// TODO: play around with parameters: https://docs.opencv.org/4.1.1/d9/d0c/group__calib3d.html#ga13f7e34de8fa516a686a56af1196247f
 		std::vector<uchar> keypointMatchMask;
-		cv::Mat essentialMatrix = cv::Mat(3, 3, CV_64FC1);
-		essentialMatrix = cv::findEssentialMat(leftMatches, rightMatches, this->calibration.getCameraMatrix(), cv::RANSAC, 0.999, 2.0, keypointMatchMask);
-
-		std::cout << essentialMatrix.empty() << std::endl;
-		std::cout << essentialMatrix.isContinuous() << std::endl;
-		std::cout << essentialMatrix << std::endl;
+		
+		cv::Mat essentialMatrix = cv::findEssentialMat(leftMatches, rightMatches, this->calibration.getCameraMatrix(), cv::RANSAC, 0.99, 1.0, keypointMatchMask);
 
 		// compute R and t from the essential matrix
 		// using https://docs.opencv.org/4.1.1/d9/d0c/group__calib3d.html#ga13f7e34de8fa516a686a56af1196247f
 		cv::Mat localRotation, localTranslation;
 		int numberOfInliers = cv::recoverPose(essentialMatrix, leftMatches, rightMatches, calibration.getCameraMatrix(), localRotation, localTranslation, keypointMatchMask);
 
-		std::cout << localRotation.isContinuous() << std::endl;
-		std::cout << localTranslation.isContinuous() << std::endl;
+		// cv::Mat previousTransform = currentScene.getPreviousTransform();
+		// cv::Mat localTransform = combineToTransformation(localRotation, localTranslation);
+		// cv::Mat globalTransform = previousTransform * localTransform;
+		 cv::Mat globalTransform = currentScene.getPreviousTransform() * combineToTransformation(localRotation,  localTranslation);
 
 		// compute the transformation for tranforming the current scene into the the coordinate system of the first scene
-		cv::Mat globalTransform = currentScene.getPreviousTransform() * combineToTransformation(localRotation,  localTranslation);
-
 		cv::Mat globalRotation, globalTranslation;
 		getFromTransformation(globalTransform, globalRotation, globalTranslation);
 
 		// TODO: check output and maybe convert the input types to float 
 		// triangulate and get the world points
-		cv::Mat1d worldPoints;
-		cv::triangulatePoints(currentScene.getPreviousProjection(), getProjection(globalRotation, globalTransform), leftMatches, rightMatches, worldPoints);
-
-
+		cv::Mat worldPoints;
+		cv::triangulatePoints(currentScene.getPreviousProjection(), getProjection(globalRotation, globalTranslation), leftMatches, rightMatches, worldPoints);
 
 		if (!currentScene.isFirstImagePair()) {
 			assert(worldPoints.cols == keypointMatchMask.size());

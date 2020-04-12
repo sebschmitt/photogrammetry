@@ -25,7 +25,7 @@ namespace Scene {
         ImagePair* prevPair = nullptr;
         ImagePair* nextPair = nullptr;
 
-        Calibration* cameraCalibration = nullptr;
+        Calibration cameraCalibration;
         
         // std::vector<std::tuple<cv::Point2f, cv::Point2f>> matches;
         std::vector<size_t> matchedKeypointsLeft;
@@ -43,8 +43,8 @@ namespace Scene {
         ImagePair(Image leftImage, Image rightImage, std::vector<size_t> matchedKeypointsLeft, std::vector<size_t> matchedKeypointsRight);
         ImagePair(Image leftImage, Image rightImage, std::vector<size_t> matchedKeypointsLeft, std::vector<size_t> matchedKeypointsRight, Calibration cameracalibration);
     
-        std::vector<cv::Point2f> getLeftPoints();
-        std::vector<cv::Point2f> getRightPoints();
+        std::vector<cv::Point2f> &getLeftPoints();
+        std::vector<cv::Point2f> &getRightPoints();
 
         std::vector<cv::Point2f> getLeftMatches();
         std::vector<cv::Point2f> getRightMatches();
@@ -54,14 +54,14 @@ namespace Scene {
 
         std::string getLeftImageName();
         std::string getRightImageName();
-        cv::Mat getLeftImage();
-        cv::Mat getRightImage();
-        cv::Mat& getProjection();
-        cv::Mat& getTransform();
+        cv::Mat& getLeftImage();
+        cv::Mat& getRightImage();
+        cv::Mat getProjection();
+        cv::Mat getTransform();
         cv::Mat& getWorldPoints();
 
-        const cv::Mat& getPreviousTransform();
-        const cv::Mat& getPreviousProjection();
+        const cv::Mat getPreviousTransform();
+        cv::Mat getPreviousProjection();
 
         bool isFirstImagePair();
 

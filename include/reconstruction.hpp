@@ -13,7 +13,8 @@
 class SceneReconstructor {
 	private:
 		Calibration calibration;
-		cv::Mat getProjection(const cv::Mat &R, const cv::Mat &t, int scale = 1);
+		cv::Mat getProjection(const cv::Mat &R, const cv::Mat &t);
+		// cv::Mat getProjectionFromTransform(const cv::Mat &R, const cv::Mat &t, int scale = 1);
 		cv::Mat combineToTransformation(const cv::Mat &rotation, const cv::Mat &translation);
 		void getFromTransformation(const cv::Mat& transformation, cv::Mat &rotation, cv::Mat& translation);
 

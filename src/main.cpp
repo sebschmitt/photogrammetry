@@ -126,9 +126,6 @@ int main(int argc, char *argv[]) {
     SceneReconstructor reconstructor(calb);
     reconstructor.reconstructScenes(sequence.createIterator());
 
-
-
-
     //PlyModelExporter exporter;
     //exporter.exportPointCloud(a_outFile.getValue<string>(), worldPoints);
 
