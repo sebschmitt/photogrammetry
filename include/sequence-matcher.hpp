@@ -19,11 +19,12 @@ struct ImageContainer {
 class SequenceMatcher {
 
 private:
+    Calibration calibration;
 	void getKeypointIndexes(const ImageContainer& leftImageContainer, const size_t& rightImageIndex, std::vector<size_t>& leftKeypointIndexes, std::vector<size_t> &rightKeypointIndexes);
 	Scene::Image createImageFromContainer(ImageContainer container);
 
 public:
-    //SequenceMatcher();
+    SequenceMatcher(Calibration calibration);
 
     Scene::SceneSequence generateSequence(std::filesystem::path folderpath);
  };

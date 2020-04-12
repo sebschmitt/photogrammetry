@@ -10,6 +10,7 @@
 
 #include "argparser.h"
 #include <sequence-matcher.hpp>
+#include <reconstruction.hpp>
 
 
 
@@ -21,9 +22,7 @@ int main(int argc, char *argv[]) {
     // string testFolder = "./resources/ps4_controller";
     string testFolder = "./resources/pokemon_ball";
 
-
-    SequenceMatcher sequenceMatcher;
-    sequenceMatcher.generateSequence(testFolder);
+    
 
 
 
@@ -97,10 +96,10 @@ int main(int argc, char *argv[]) {
     }
 
     /* Prototype for later use */
-    if (a_matchImages.isFound()) {
-        for (const auto& entry : filesystem::directory_iterator(a_matchImages.getValue<string>())) {
-        }
-    }
+    // if (a_matchImages.isFound()) {
+        // for (const auto& entry : filesystem::directory_iterator(a_matchImages.getValue<string>())) {
+        // }
+    // }
 
 
 
@@ -114,34 +113,24 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
+
     // TODO: validate file format
     std::vector<filesystem::path> inputImagePaths;
     for (const auto& entry : filesystem::directory_iterator(a_matchImages.getValue<string>())) {
         inputImagePaths.push_back(entry.path());
     }
 
-    cv::Mat img1 = cv::imread(inputImagePaths.at(0).string());
-    cv::Mat img2 = cv::imread(inputImagePaths.at(1).string());
+    SequenceMatcher sequenceMatcher(calb);
+    Scene::SceneSequence sequence = sequenceMatcher.generateSequence(testFolder);
 
-    vector<cv::Point2f> imagePoints1;
-    vector<cv::Point2f> imagePoints2;
-    FeatureMatching featureMatching = FeatureMatching(calb);
-    featureMatching.findMatches(img1, img2, imagePoints1, imagePoints2);
+    SceneReconstructor reconstructor(calb);
+    reconstructor.reconstructScenes(sequence.createIterator());
 
-    cout << "matching successful" << endl;
-    EssentialMatrix essentialMatrixComputer(calb);
 
-    cv::Mat1d extrincts, projectionMatrix;
-    cv::Mat1f worldPoints;
-    essentialMatrixComputer.determineEssentialMatrix(imagePoints1,
-                                                     imagePoints2,
-                                                     extrincts,
-                                                     projectionMatrix,
-                                                     worldPoints);
-    worldPoints.pop_back();
 
-    PlyModelExporter exporter;
-    exporter.exportPointCloud(a_outFile.getValue<string>(), worldPoints);
+
+    //PlyModelExporter exporter;
+    //exporter.exportPointCloud(a_outFile.getValue<string>(), worldPoints);
 
     return 0;
 }

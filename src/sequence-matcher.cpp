@@ -20,6 +20,10 @@
 
 
 
+SequenceMatcher::SequenceMatcher(Calibration calibration) {
+    this->calibration = calibration;
+}
+
 Scene::SceneSequence SequenceMatcher::generateSequence(std::filesystem::path folderPath) {
 
     ImageContainer leftBestMatch, rightBestMatch;
@@ -39,8 +43,11 @@ Scene::SceneSequence SequenceMatcher::generateSequence(std::filesystem::path fol
 
         try {
             // TODO: addtional testing for e.g image size, filetype etc.
-            image.image = cv::imread(imageEntry.path().string());
-            assert(!image.image.empty());
+            cv::Mat input = cv::imread(imageEntry.path().string());
+
+            assert(!input.empty());
+
+            calibration.undistortImage(input, image.image);
         }
         catch (const cv::Exception e) {
             std::cerr << "Failed to open the file " << image.name << ". Error Message: " << e.msg << std::endl;
@@ -169,11 +176,15 @@ Scene::SceneSequence SequenceMatcher::generateSequence(std::filesystem::path fol
         currentLeft = createImageFromContainer(images.at(imageIndex));
         currentRight = createImageFromContainer(images.at(imageIndex+1));
 
+        // todo: check that these indexes are correct
         this->getKeypointIndexes(images.at(imageIndex), imageIndex + 1, leftKeypointMatches, rightKeypointMatches);
 
-
         //Scene::ImagePair* pair = new Scene::ImagePair(currentLeft, currentRight, leftKeypointMatches, rightKeypointMatches);
-        sequence.append(new Scene::ImagePair(currentLeft, currentRight, leftKeypointMatches, rightKeypointMatches));
+
+        if (imageIndex == 0)
+			sequence.append(new Scene::ImagePair(currentLeft, currentRight, leftKeypointMatches, rightKeypointMatches, calibration));
+        else 
+			sequence.append(new Scene::ImagePair(currentLeft, currentRight, leftKeypointMatches, rightKeypointMatches));
     }
 
     return sequence;
