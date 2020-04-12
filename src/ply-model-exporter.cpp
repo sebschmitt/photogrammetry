@@ -9,6 +9,24 @@ using namespace std;
 using namespace cv;
 
 
+void PlyModelExporter::exportPointCloudSequence(const filesystem::path& filepath,  Iterator<Scene::ImagePair>* imageSequence) {
+
+    cv::Mat worldPoints = cv::Mat(3, 1, CV_32FC1);
+
+    while (imageSequence->hasNext()) {
+        Scene::ImagePair *currentScene = imageSequence->next();
+
+        cv::Mat points = currentScene->getWorldPoints();
+        
+        if (points.cols == 0)
+            continue;
+
+        cv::hconcat(worldPoints, currentScene->getWorldPoints(), worldPoints);
+    }
+
+    exportPointCloud(filepath, worldPoints);
+}
+
 void PlyModelExporter::exportPointCloud(const filesystem::path& filepath,
                                         const Mat& worldPoints) {
     assert(worldPoints.rows == 3);

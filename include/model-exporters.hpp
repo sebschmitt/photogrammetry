@@ -8,6 +8,7 @@ class PlyModelExporter : ModelExporter {
     public:
         void exportPointCloud(const std::filesystem::path& filepath,
                               const cv::Mat& worldPoints) override;
+        void exportPointCloudSequence(const std::filesystem::path& filepath, Iterator<Scene::ImagePair>* imageSequence) override;
 
     private:
         cv::Mat worldPoints;
