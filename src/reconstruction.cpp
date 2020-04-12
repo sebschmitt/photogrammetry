@@ -47,10 +47,10 @@ void SceneReconstructor::getFromTransformation(const cv::Mat& transformation, cv
 void SceneReconstructor::reconstructScenes(Iterator<Scene::ImagePair>* pairSequence) {
 
 	while (pairSequence->hasNext()) {
-		Scene::ImagePair currentScene = pairSequence->next();
+		Scene::ImagePair *currentScene = pairSequence->next();
 
-		std::vector<cv::Point2f> leftMatches = currentScene.getLeftMatches();
-		std::vector<cv::Point2f> rightMatches = currentScene.getRightMatches();
+		std::vector<cv::Point2f> leftMatches = currentScene->getLeftMatches();
+		std::vector<cv::Point2f> rightMatches = currentScene->getRightMatches();
 
 
 		// compute the essential matrix
@@ -67,40 +67,68 @@ void SceneReconstructor::reconstructScenes(Iterator<Scene::ImagePair>* pairSeque
 		// cv::Mat previousTransform = currentScene.getPreviousTransform();
 		// cv::Mat localTransform = combineToTransformation(localRotation, localTranslation);
 		// cv::Mat globalTransform = previousTransform * localTransform;
-		 cv::Mat globalTransform = currentScene.getPreviousTransform() * combineToTransformation(localRotation,  localTranslation);
+		 cv::Mat globalTransform = currentScene->getPreviousTransform() * combineToTransformation(localRotation,  localTranslation);
 
 		// compute the transformation for tranforming the current scene into the the coordinate system of the first scene
 		cv::Mat globalRotation, globalTranslation;
 		getFromTransformation(globalTransform, globalRotation, globalTranslation);
 
+		cv::Mat currentProjection = getProjection(globalRotation, globalTranslation);
+
 		// TODO: check output and maybe convert the input types to float 
 		// triangulate and get the world points
 		cv::Mat worldPoints;
-		cv::triangulatePoints(currentScene.getPreviousProjection(), getProjection(globalRotation, globalTranslation), leftMatches, rightMatches, worldPoints);
+		cv::triangulatePoints(currentScene->getPreviousProjection(), currentProjection, leftMatches, rightMatches, worldPoints);
 
-		if (!currentScene.isFirstImagePair()) {
-			assert(worldPoints.cols == keypointMatchMask.size());
+		// if (!currentScene->isFirstImagePair()) {
+		assert(worldPoints.cols == keypointMatchMask.size());
 
-			std::vector<size_t> usedKeypointIndexesForReconstruction;
-			
-			for (int i = 0; i < worldPoints.cols; i++) {
-				float divisor = worldPoints.at<double>(3, i);
+		// normalize points
+		std::vector<size_t> usedKeypointIndexesForReconstruction;
 
-				worldPoints.at<double>(0, i) /= divisor;
-				worldPoints.at<double>(1, i) /= divisor;
-				worldPoints.at<double>(2, i) /= divisor;
-				worldPoints.at<double>(3, i) /= divisor;
+		for (int i = 0; i < worldPoints.cols; i++) {
+			float divisor = worldPoints.at<float>(3, i);
 
-				if (keypointMatchMask.at(i) && divisor < 0)
-					std::cout << "Found negative z in with inlier mask" << std::endl;
-				if (keypointMatchMask.at(i) == 0 && divisor > 0)
-					std::cout << "Found outlier with posivtive z." << std::endl;
+			worldPoints.at<float>(0, i) /= divisor;
+			worldPoints.at<float>(1, i) /= divisor;
+			worldPoints.at<float>(2, i) /= divisor;
+			worldPoints.at<float>(3, i) /= divisor;
+
+			if (keypointMatchMask.at(i) && divisor < 0)
+				std::cout << "Found negative z in with inlier mask" << std::endl;
+			if (keypointMatchMask.at(i) == 0 && divisor > 0)
+				std::cout << "Found outlier with posivtive z." << std::endl;
+		}
+		//}
+		
+		if (currentScene->isFirstImagePair()) {
+			std::map<size_t, cv::Point3f> machtingWorldPoints = currentScene->getMatchingWorldPoints(usedKeypointIndexesForReconstruction);
+			std::vector<std::tuple<double, double>> distances;
+
+			for (auto  outerIterator = machtingWorldPoints.begin(); outerIterator != machtingWorldPoints.begin(); outerIterator++) {
+				cv::Mat firstPoint = worldPoints.col(outerIterator->first);
+
+				for (auto innerIterator = machtingWorldPoints.begin(); innerIterator != machtingWorldPoints.begin(); innerIterator++) {
+					if (outerIterator == innerIterator)
+						continue;
+
+					cv::Mat secondPoint = worldPoints.col(outerIterator->first);
+
+					
+				}
 			}
+
+
+
+
 		}
 
 
 
 
-
+		// triagnulation complete
+		// store results
+		// TODO: ensure right variables are used
+		currentScene->setReconstruction(currentProjection, globalTransform, worldPoints, keypointMatchMask);
 	}
 }
