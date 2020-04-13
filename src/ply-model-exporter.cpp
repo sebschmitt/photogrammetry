@@ -17,11 +17,12 @@ void PlyModelExporter::exportPointCloudSequence(const filesystem::path& filepath
         Scene::ImagePair *currentScene = imageSequence->next();
 
         cv::Mat points = currentScene->getWorldPoints();
+        std::cout << points << std::endl;
         
         if (points.cols == 0)
             continue;
 
-        cv::hconcat(worldPoints, currentScene->getWorldPoints(), worldPoints);
+        cv::hconcat(worldPoints, points, worldPoints);
     }
 
     exportPointCloud(filepath, worldPoints);

@@ -38,7 +38,6 @@ namespace Scene {
         std::map<size_t, size_t> matchIdxToWorldPoint;
 
 
-
     public:
         ImagePair(Image leftImage, Image rightImage, std::vector<size_t> matchedKeypointsLeft, std::vector<size_t> matchedKeypointsRight);
         ImagePair(Image leftImage, Image rightImage, std::vector<size_t> matchedKeypointsLeft, std::vector<size_t> matchedKeypointsRight, Calibration cameracalibration);
@@ -49,8 +48,8 @@ namespace Scene {
         std::vector<cv::Point2f> getLeftMatches();
         std::vector<cv::Point2f> getRightMatches();
 
-        std::map<size_t, cv::Point3f> getMatchingWorldPoints(std::vector<size_t> reconstructedMatchIndixes);
-        std::map<size_t, cv::Point3f> getWorldPointsFromRightKeypoints(std::vector<size_t> rightKeypointIndixes);
+        std::map<size_t, cv::Point3f> ImagePair::getMatchingWorldPoints(const std::vector<size_t> &reconstructedMatchIndixes);
+        std::map<size_t, cv::Point3f> getWorldPointsFromRightKeypoints(const std::vector<size_t> &rightKeypointIndixes);
 
         std::string getLeftImageName();
         std::string getRightImageName();

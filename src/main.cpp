@@ -19,8 +19,6 @@ using namespace std;
 
 int main(int argc, char *argv[]) {
 
-    // string testFolder = "./resources/ps4_controller";
-    string testFolder = "./resources/pokemon_ball";
 
     
 
@@ -119,6 +117,9 @@ int main(int argc, char *argv[]) {
     for (const auto& entry : filesystem::directory_iterator(a_matchImages.getValue<string>())) {
         inputImagePaths.push_back(entry.path());
     }
+
+    string testFolder = "./resources/ps4_controller";
+    // string testFolder = "./resources/pokemon_ball";
 
     SequenceMatcher sequenceMatcher(calb);
     Scene::SceneSequence sequence = sequenceMatcher.generateSequence(testFolder);

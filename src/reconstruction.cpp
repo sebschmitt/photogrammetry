@@ -45,7 +45,7 @@ void SceneReconstructor::getFromTransformation(const cv::Mat& transformation, cv
 }
 
 cv::Point3f SceneReconstructor::toPoint(cv::Mat& column) {
-	assert(column.cols == 1 && column.rows == 3);
+	assert(column.cols == 1);
 	assert(column.type() == CV_32FC1);
 		
 	return cv::Point3f(column.at<float>(0, 0), column.at<float>(1, 0), column.at<float>(2, 0));
@@ -82,85 +82,98 @@ void SceneReconstructor::reconstructScenes(Iterator<Scene::ImagePair>* pairSeque
 		// TODO: play around with parameters: https://docs.opencv.org/4.1.1/d9/d0c/group__calib3d.html#ga13f7e34de8fa516a686a56af1196247f
 		std::vector<uchar> keypointMatchMask;
 
-		cv::Mat essentialMatrix = cv::findEssentialMat(leftMatches, rightMatches, this->calibration.getCameraMatrix(), cv::RANSAC, 0.99, 1.0, keypointMatchMask);
+		cv::Mat essentialMatrix = cv::findEssentialMat(leftMatches, rightMatches, this->calibration.getCameraMatrix(), cv::LMEDS, 0.999, 3, keypointMatchMask);
 
 		// compute R and t from the essential matrix
 		// using https://docs.opencv.org/4.1.1/d9/d0c/group__calib3d.html#ga13f7e34de8fa516a686a56af1196247f
 		cv::Mat localRotation, localTranslation;
 		int numberOfInliers = cv::recoverPose(essentialMatrix, leftMatches, rightMatches, calibration.getCameraMatrix(), localRotation, localTranslation, keypointMatchMask);
 
-		cv::Mat currentProjection;
+		cv::Mat projection;
 		cv::Mat globalTransform;
 
-		computPoseAndProjection(localRotation, localTranslation, currentScene->getPreviousTransform(), globalTransform, currentProjection);
+		computPoseAndProjection(localRotation, localTranslation, currentScene->getPreviousTransform(), globalTransform, projection);
 
 		// TODO: check output and maybe convert the input types to float 
 		// triangulate and get the world points
 		cv::Mat worldPoints;
-		cv::triangulatePoints(currentScene->getPreviousProjection(), currentProjection, leftMatches, rightMatches, worldPoints);
+		cv::Mat previousProjection;
+		cv::Mat currentProjection;
 
-		// if (!currentScene->isFirstImagePair()) {
-		assert(worldPoints.cols == keypointMatchMask.size());
+		currentScene->getPreviousProjection().convertTo(previousProjection, CV_32FC1);
+		projection.convertTo(currentProjection, CV_32FC1);
+		
+		cv::triangulatePoints(currentScene->getPreviousProjection(), projection, leftMatches, rightMatches, worldPoints);
 
 		// normalize points
 		std::vector<size_t> usedKeypointIndexesForReconstruction;
-
+		std::cout << worldPoints << std::endl;
 		for (int i = 0; i < worldPoints.cols; i++) {
-			float divisor = worldPoints.at<float>(3, i);
 
-			worldPoints.at<float>(0, i) /= divisor;
-			worldPoints.at<float>(1, i) /= divisor;
-			worldPoints.at<float>(2, i) /= divisor;
-			worldPoints.at<float>(3, i) /= divisor;
+			// only continue with world points, which are inliers and have a positive z value
+			if (keypointMatchMask.at(i) && ((worldPoints.at<float>(2, i) > 0 && worldPoints.at<float>(3, i) > 0)|| worldPoints.at<float>(2, i) < 0 && worldPoints.at<float>(3, i) < 0)) {
+				float divisor = worldPoints.at<float>(3, i);
 
-			if (keypointMatchMask.at(i) && worldPoints.at<float>(2,i) < 0)
-				std::cout << "Found negative z in with inlier mask" << std::endl;
-			if (keypointMatchMask.at(i) == 0 && worldPoints.at<float>(2,i) > 0)
-				std::cout << "Found outlier with posivtive z." << std::endl;
+				worldPoints.at<float>(0, i) /= divisor;
+				worldPoints.at<float>(1, i) /= divisor;
+				worldPoints.at<float>(2, i) /= divisor;
+				worldPoints.at<float>(3, i) /= divisor;
 
-			if (keypointMatchMask.at(i))
 				usedKeypointIndexesForReconstruction.push_back(i);
+			} else {
+				// ensure that the keypoint is set to 0 for outliers
+				keypointMatchMask.at(i) = 0;
+			}
 		}
-		//}
 
 		if (currentScene->isFirstImagePair())
-			currentScene->setReconstruction(currentProjection, globalTransform, worldPoints, keypointMatchMask);
+			currentScene->setReconstruction(projection, globalTransform, worldPoints, keypointMatchMask);
 		else {
-		//if (currentScene->isFirstImagePair()) {
 			std::map<size_t, cv::Point3f> machtingWorldPoints = currentScene->getMatchingWorldPoints(usedKeypointIndexesForReconstruction);
 			std::vector<std::tuple<double, double>> distances;
 
-			for (auto outerIterator = machtingWorldPoints.begin(); outerIterator != machtingWorldPoints.begin(); outerIterator++) {
-				cv::Point3f pointA = toPoint(worldPoints.col(outerIterator->first));
+			auto outerIterator = machtingWorldPoints.begin();
+			while(outerIterator != machtingWorldPoints.end()) {
 
-				for (auto innerIterator = machtingWorldPoints.begin(); innerIterator != machtingWorldPoints.begin(); innerIterator++) {
-					if (outerIterator == innerIterator)
-						continue;
+				cv::Point3f unscaledA = toPoint(worldPoints.col(outerIterator->first));
+				cv::Point3f scaledA = outerIterator->second;
 
-					cv::Point3f pointB = toPoint(worldPoints.col(outerIterator->first));
+				outerIterator++;
+				if (outerIterator == machtingWorldPoints.end())
+					break;
 
-					distances.push_back(std::make_tuple(getDistance(pointA, pointB), getDistance(outerIterator->second, innerIterator->second)));
-				}
+				// TODO: the index to worldPoint Mapping is incorect, the indexes are wrong
+				cv::Point3f unscaledB = toPoint(worldPoints.col(outerIterator->first));
+				cv::Point3f scaledB = outerIterator->second;
+
+				// TODO: fix scaling issues
+				distances.push_back(std::make_tuple(getDistance(unscaledA, unscaledB), getDistance(scaledA, scaledB)));
 			}
 
 			double scale = 0;
 			for (int i = 0; i < distances.size(); i++) {
-				scale = std::get<1>(distances.at(i)) / std::get<0>(distances.at(i));
+				if (std::get<1>(distances.at(i)) == 0 || std::get<0>(distances.at(i)) == 0)
+					continue;
+				scale += std::get<1>(distances.at(i)) / std::get<0>(distances.at(i));
 			}
 
 			scale /= distances.size();
 
-			computPoseAndProjection(localRotation, localTranslation * scale, currentScene->getPreviousTransform(), globalTransform, currentProjection);
-			cv::Mat scaledWorldPoints;
-			cv::triangulatePoints(currentScene->getPreviousProjection(), currentProjection, leftMatches, rightMatches, worldPoints);
+			worldPoints.release();
 
-			cv::Mat filteredWorldPoints(3, usedKeypointIndexesForReconstruction.size(), CV_32FC1);
-			for (int i = 0; i < scaledWorldPoints.cols; i++) {
-				filteredWorldPoints.at<float>(0, i) /= scaledWorldPoints.at<float>(3, i);
-				filteredWorldPoints.at<float>(1, i) /= scaledWorldPoints.at<float>(3, i);
-				filteredWorldPoints.at<float>(2, i) /= scaledWorldPoints.at<float>(3, i);
-			}
-			currentScene->setReconstruction(currentProjection, globalTransform, filteredWorldPoints, keypointMatchMask);
+			computPoseAndProjection(localRotation, localTranslation * scale, currentScene->getPreviousTransform(), globalTransform, projection);
+
+			cv::triangulatePoints(currentScene->getPreviousProjection(), projection, leftMatches, rightMatches, worldPoints);
+
+			//cv::Mat filteredWorldPoints(3, usedKeypointIndexesForReconstruction.size(), CV_32FC1);
+			//for (int i = 0; i < scaledWorldPoints.cols; i++) {
+			//	filteredWorldPoints.at<float>(0, i) /= scaledWorldPoints.at<float>(3, i);
+			//	filteredWorldPoints.at<float>(1, i) /= scaledWorldPoints.at<float>(3, i);
+			//	filteredWorldPoints.at<float>(2, i) /= scaledWorldPoints.at<float>(3, i);
+			//}
+
+			projection.convertTo(currentProjection, CV_32FC1);
+			currentScene->setReconstruction(projection, globalTransform, worldPoints, keypointMatchMask);
 		}
 
 
