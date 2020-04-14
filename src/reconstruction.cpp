@@ -132,19 +132,19 @@ void SceneReconstructor::reconstructScenes(Iterator<Scene::ImagePair>* pairSeque
 			std::map<size_t, cv::Point3f> machtingWorldPoints = currentScene->getMatchingWorldPoints(usedKeypointIndexesForReconstruction);
 			std::vector<std::tuple<double, double>> distances;
 
-			auto outerIterator = machtingWorldPoints.begin();
-			while(outerIterator != machtingWorldPoints.end()) {
+			auto matchWorldPointPair = machtingWorldPoints.begin();
+			while(matchWorldPointPair != machtingWorldPoints.end()) {
 
-				cv::Point3f unscaledA = toPoint(worldPoints.col(outerIterator->first));
-				cv::Point3f scaledA = outerIterator->second;
+				cv::Point3f unscaledA = toPoint(worldPoints.col(matchWorldPointPair->first));
+				cv::Point3f scaledA = matchWorldPointPair->second;
 
-				outerIterator++;
-				if (outerIterator == machtingWorldPoints.end())
+				matchWorldPointPair++;
+				if (matchWorldPointPair == machtingWorldPoints.end())
 					break;
 
 				// TODO: the index to worldPoint Mapping is incorect, the indexes are wrong
-				cv::Point3f unscaledB = toPoint(worldPoints.col(outerIterator->first));
-				cv::Point3f scaledB = outerIterator->second;
+				cv::Point3f unscaledB = toPoint(worldPoints.col(matchWorldPointPair->first));
+				cv::Point3f scaledB = matchWorldPointPair->second;
 
 				// TODO: fix scaling issues
 				distances.push_back(std::make_tuple(getDistance(unscaledA, unscaledB), getDistance(scaledA, scaledB)));

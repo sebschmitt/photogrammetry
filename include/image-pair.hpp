@@ -49,7 +49,7 @@ namespace Scene {
         std::vector<cv::Point2f> getRightMatches();
 
         std::map<size_t, cv::Point3f> ImagePair::getMatchingWorldPoints(const std::vector<size_t> &reconstructedMatchIndixes);
-        std::map<size_t, cv::Point3f> getWorldPointsFromRightKeypoints(const std::vector<size_t> &rightKeypointIndixes);
+        std::map<size_t, cv::Point3f> getWorldPointsFromRightKeypoints(const std::map<size_t, size_t> &rightKeypointIndexToNextMatchIndex);
 
         std::string getLeftImageName();
         std::string getRightImageName();

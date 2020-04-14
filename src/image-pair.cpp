@@ -5,6 +5,7 @@
 #include "image-pair.hpp"
 
 #include <numeric>
+#include <iostream>
 #include <exception>
 #include <utility>
 
@@ -132,6 +133,9 @@ namespace Scene {
 				this->worldPoints.at<float>(1, worldPointIndex) = worldPoints.at<float>(1, matchIndex) / divisor;
 				this->worldPoints.at<float>(2, worldPointIndex) = worldPoints.at<float>(2, matchIndex) / divisor;
 
+				if (this->worldPoints.at<float>(2, worldPointIndex) < 0)
+					std::cout << "Z axis smaller than zero. this should not happen..." << std::endl;
+
 				matchIdxToWorldPoint[matchIndex] = worldPointIndex;
 				worldPointIndex++;
 			}
@@ -157,31 +161,36 @@ namespace Scene {
 	}
 
 	std::map<size_t, cv::Point3f> ImagePair::getMatchingWorldPoints(const std::vector<size_t>& reconstructedMatchIndixes) {
-		std::vector<size_t> leftKeypointIndixes;
+		std::map<size_t, size_t> keypointIndexToMatchIndex;
 
 		for (auto& matchIndex : reconstructedMatchIndixes) {
-			leftKeypointIndixes.push_back(matchedKeypointsLeft.at(matchIndex));
+			keypointIndexToMatchIndex.emplace(matchedKeypointsLeft.at(matchIndex), matchIndex);
 		}
 
-		return prevPair->getWorldPointsFromRightKeypoints(leftKeypointIndixes);
+		return prevPair->getWorldPointsFromRightKeypoints(keypointIndexToMatchIndex);
 	}
 
 
-	std::map<size_t, cv::Point3f> ImagePair::getWorldPointsFromRightKeypoints(const std::vector<size_t> &rightKeypointIndixes) {
-		std::map<size_t, cv::Point3f> foundWorldPoints;
+	std::map<size_t, cv::Point3f> ImagePair::getWorldPointsFromRightKeypoints(const std::map<size_t, size_t> &keypointIndexToNextMatchIndex) {
+		std::map<size_t, cv::Point3f> nextMatchIndexToWorldPoint;
 
-		for (auto keypointIndex : rightKeypointIndixes) {
-			if (rightKeypointsToMatch.count(keypointIndex) > 0) {
+		for (auto keypointMatchPair : keypointIndexToNextMatchIndex) {
+			// check if the  provided keypoint has has a match
+			if (rightKeypointsToMatch.count(keypointMatchPair.first) > 0) {
 
-				size_t matchIndex = this->rightKeypointsToMatch[keypointIndex];
-				size_t worldPointIndex = this->matchIdxToWorldPoint[matchIndex];
+				size_t matchIndex = this->rightKeypointsToMatch[keypointMatchPair.first];
 
-				cv::Point3f point = cv::Point3f(worldPoints.at<float>(0, worldPointIndex), worldPoints.at<float>(1, worldPointIndex), worldPoints.at<float>(2, worldPointIndex));
+				// ensure the match has a world point
+				if (matchIdxToWorldPoint.count(matchIndex) > 0) {
+					size_t worldPointIndex = this->matchIdxToWorldPoint[matchIndex];
+					cv::Point3f point = cv::Point3f(worldPoints.at<float>(0, worldPointIndex), worldPoints.at<float>(1, worldPointIndex), worldPoints.at<float>(2, worldPointIndex));
 
-				foundWorldPoints[matchIndex] = point;
+					// store the the pair nextMatchIndex - worldpoint
+					nextMatchIndexToWorldPoint[keypointMatchPair.second] = point;
+				}
 			}
 		}
-		return foundWorldPoints;
+		return nextMatchIndexToWorldPoint;
 	}
 
 	std::string ImagePair::getLeftImageName() {

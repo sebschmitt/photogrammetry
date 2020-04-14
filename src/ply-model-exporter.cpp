@@ -11,7 +11,7 @@ using namespace cv;
 
 void PlyModelExporter::exportPointCloudSequence(const filesystem::path& filepath,  Iterator<Scene::ImagePair>* imageSequence) {
 
-    cv::Mat worldPoints = cv::Mat(3, 1, CV_32FC1);
+    cv::Mat worldPoints = cv::Mat(3, 0, CV_32FC1);
 
     while (imageSequence->hasNext()) {
         Scene::ImagePair *currentScene = imageSequence->next();
