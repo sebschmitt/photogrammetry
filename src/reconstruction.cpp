@@ -15,8 +15,11 @@ cv::Mat SceneReconstructor::getProjection(const cv::Mat &globalRotation, const c
 
 	// globalRotation.copyTo(projection(cv::Range(0, 3), cv::Range(0, 3)));
 	// globalTranslation.copyTo(projection(cv::Range(0, 3), cv::Range(3, 4)));
-
+	std::cout << globalRotation.t() << std::endl;
+	std::cout << -globalRotation.t() * globalTranslation << std::endl;
 	cv::hconcat(globalRotation.t(), -globalRotation.t() * globalTranslation, projection);
+	std::cout << projection << std::endl;
+
 	return calibration.getCameraMatrix() * projection;
 }
 
@@ -38,10 +41,6 @@ void SceneReconstructor::getFromTransformation(const cv::Mat& transformation, cv
 	
 	transformation(cv::Range(0, 3), cv::Range(0, 3)).copyTo(rotation);
 	transformation(cv::Range(0, 3), cv::Range(3, 4)).copyTo(translation);
-
-	std::cout << transformation << std::endl;
-	std::cout << rotation << std::endl;
-	std::cout << translation << std::endl;
 }
 
 cv::Point3f SceneReconstructor::toPoint(cv::Mat& column) {
@@ -69,6 +68,14 @@ void SceneReconstructor::computPoseAndProjection(const cv::Mat& localRotation, c
 		projection = getProjection(globalRotation, globalTranslation);
 }
 
+void SceneReconstructor::combineMask(const std::vector<uchar>& input, std::vector<uchar> &output) {
+	assert(input.size() == output.size());
+	for (int i = 0; i < input.size(); i++) {
+		if (!input.at(i))
+			output.at(i) = 0;
+	}
+}
+
 void SceneReconstructor::reconstructScenes(Iterator<Scene::ImagePair>* pairSequence) {
 
 	while (pairSequence->hasNext()) {
@@ -80,14 +87,17 @@ void SceneReconstructor::reconstructScenes(Iterator<Scene::ImagePair>* pairSeque
 
 		// compute the essential matrix
 		// TODO: play around with parameters: https://docs.opencv.org/4.1.1/d9/d0c/group__calib3d.html#ga13f7e34de8fa516a686a56af1196247f
-		std::vector<uchar> keypointMatchMask;
+		std::vector<uchar> matchMask;
 
-		cv::Mat essentialMatrix = cv::findEssentialMat(leftMatches, rightMatches, this->calibration.getCameraMatrix(), cv::LMEDS, 0.999, 3, keypointMatchMask);
+		cv::Mat essentialMatrix = cv::findEssentialMat(leftMatches, rightMatches, this->calibration.getCameraMatrix(), cv::LMEDS, 0.999, 1, matchMask);
 
 		// compute R and t from the essential matrix
 		// using https://docs.opencv.org/4.1.1/d9/d0c/group__calib3d.html#ga13f7e34de8fa516a686a56af1196247f
+		std::vector<uchar> poseMask;
 		cv::Mat localRotation, localTranslation;
-		int numberOfInliers = cv::recoverPose(essentialMatrix, leftMatches, rightMatches, calibration.getCameraMatrix(), localRotation, localTranslation, keypointMatchMask);
+		int numberOfInliers = cv::recoverPose(essentialMatrix, leftMatches, rightMatches, calibration.getCameraMatrix(), localRotation, localTranslation, poseMask);
+
+		combineMask(poseMask, matchMask);
 
 		cv::Mat projection;
 		cv::Mat globalTransform;
@@ -103,15 +113,15 @@ void SceneReconstructor::reconstructScenes(Iterator<Scene::ImagePair>* pairSeque
 		currentScene->getPreviousProjection().convertTo(previousProjection, CV_32FC1);
 		projection.convertTo(currentProjection, CV_32FC1);
 		
-		cv::triangulatePoints(currentScene->getPreviousProjection(), projection, leftMatches, rightMatches, worldPoints);
+		cv::triangulatePoints(previousProjection, currentProjection, leftMatches, rightMatches, worldPoints);
 
 		// normalize points
 		std::vector<size_t> usedKeypointIndexesForReconstruction;
-		std::cout << worldPoints << std::endl;
 		for (int i = 0; i < worldPoints.cols; i++) {
 
 			// only continue with world points, which are inliers and have a positive z value
-			if (keypointMatchMask.at(i) && ((worldPoints.at<float>(2, i) > 0 && worldPoints.at<float>(3, i) > 0)|| worldPoints.at<float>(2, i) < 0 && worldPoints.at<float>(3, i) < 0)) {
+			if (matchMask.at(i) && ((worldPoints.at<float>(2, i) > 0 && worldPoints.at<float>(3, i) > 0) || 
+				                     worldPoints.at<float>(2, i) < 0 && worldPoints.at<float>(3, i) < 0)) {
 				float divisor = worldPoints.at<float>(3, i);
 
 				worldPoints.at<float>(0, i) /= divisor;
@@ -122,12 +132,12 @@ void SceneReconstructor::reconstructScenes(Iterator<Scene::ImagePair>* pairSeque
 				usedKeypointIndexesForReconstruction.push_back(i);
 			} else {
 				// ensure that the keypoint is set to 0 for outliers
-				keypointMatchMask.at(i) = 0;
+				matchMask.at(i) = 0;
 			}
 		}
 
 		if (currentScene->isFirstImagePair())
-			currentScene->setReconstruction(projection, globalTransform, worldPoints, keypointMatchMask);
+			currentScene->setReconstruction(projection, globalTransform, worldPoints, matchMask);
 		else {
 			std::map<size_t, cv::Point3f> machtingWorldPoints = currentScene->getMatchingWorldPoints(usedKeypointIndexesForReconstruction);
 			std::vector<std::tuple<double, double>> distances;
@@ -152,8 +162,9 @@ void SceneReconstructor::reconstructScenes(Iterator<Scene::ImagePair>* pairSeque
 
 			double scale = 0;
 			for (int i = 0; i < distances.size(); i++) {
-				if (std::get<1>(distances.at(i)) == 0 || std::get<0>(distances.at(i)) == 0)
+				if (std::get<1>(distances.at(i)) <= 0 || std::get<0>(distances.at(i)) <= 0) {
 					continue;
+				}
 				scale += std::get<1>(distances.at(i)) / std::get<0>(distances.at(i));
 			}
 
@@ -163,7 +174,8 @@ void SceneReconstructor::reconstructScenes(Iterator<Scene::ImagePair>* pairSeque
 
 			computPoseAndProjection(localRotation, localTranslation * scale, currentScene->getPreviousTransform(), globalTransform, projection);
 
-			cv::triangulatePoints(currentScene->getPreviousProjection(), projection, leftMatches, rightMatches, worldPoints);
+			projection.convertTo(currentProjection, CV_32FC1);
+			cv::triangulatePoints(previousProjection, currentProjection, leftMatches, rightMatches, worldPoints);
 
 			//cv::Mat filteredWorldPoints(3, usedKeypointIndexesForReconstruction.size(), CV_32FC1);
 			//for (int i = 0; i < scaledWorldPoints.cols; i++) {
@@ -172,8 +184,7 @@ void SceneReconstructor::reconstructScenes(Iterator<Scene::ImagePair>* pairSeque
 			//	filteredWorldPoints.at<float>(2, i) /= scaledWorldPoints.at<float>(3, i);
 			//}
 
-			projection.convertTo(currentProjection, CV_32FC1);
-			currentScene->setReconstruction(projection, globalTransform, worldPoints, keypointMatchMask);
+			currentScene->setReconstruction(projection, globalTransform, worldPoints, matchMask);
 		}
 
 

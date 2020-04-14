@@ -43,6 +43,10 @@ namespace Scene {
 
 		// create mapping of keypoint to the respective match only for the right image
 		for (size_t index = 0; index < matchedKeypointsRight.size(); index++) {
+			if (rightKeypointsToMatch.count(matchedKeypointsRight[index]) > 0) {
+				std::cout << "keypoint has multiple matches" << std::endl;
+			}
+			
 			rightKeypointsToMatch[matchedKeypointsRight[index]] = index;
 		}
 
@@ -127,14 +131,16 @@ namespace Scene {
 		size_t worldPointIndex = 0;
 		for (size_t matchIndex = 0; matchIndex < reconstructionMask.size(); matchIndex++) {
 			if (reconstructionMask.at(matchIndex)) {
+				if ((this->worldPoints.at<float>(2, worldPointIndex) > 0 && this->worldPoints.at<float>(2, worldPointIndex) < 0) ||
+					 this->worldPoints.at<float>(2, worldPointIndex) < 0 && this->worldPoints.at<float>(2, worldPointIndex) > 0) {
+					reconstructionMask.at(matchIndex) == 0;
+					continue;
+				}
 				float divisor = worldPoints.at<float>(3, matchIndex);
 
 				this->worldPoints.at<float>(0, worldPointIndex) = worldPoints.at<float>(0, matchIndex) / divisor;
 				this->worldPoints.at<float>(1, worldPointIndex) = worldPoints.at<float>(1, matchIndex) / divisor;
 				this->worldPoints.at<float>(2, worldPointIndex) = worldPoints.at<float>(2, matchIndex) / divisor;
-
-				if (this->worldPoints.at<float>(2, worldPointIndex) < 0)
-					std::cout << "Z axis smaller than zero. this should not happen..." << std::endl;
 
 				matchIdxToWorldPoint[matchIndex] = worldPointIndex;
 				worldPointIndex++;

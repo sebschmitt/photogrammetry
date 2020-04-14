@@ -22,6 +22,8 @@ class SceneReconstructor {
 		
 		void computPoseAndProjection(const cv::Mat& localRotation, const cv::Mat& localTranslation, const cv::Mat& prevTransform, cv::Mat& globalTransformation, cv::Mat& projection);
 
+		void combineMask(const std::vector<uchar>& input, std::vector<uchar> &output);
+
 	public:
 		SceneReconstructor(Calibration calibration);
 		void reconstructScenes(Iterator<Scene::ImagePair> *pairSequence);

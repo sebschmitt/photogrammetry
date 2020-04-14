@@ -39,10 +39,6 @@ void Calibration::saveCalibration(filesystem::path filepath) {
 
 void Calibration::undistortImage(const Mat& image, Mat& undistortedImage) {
     undistort(image, undistortedImage, cameraMatrix, distortionCoefficients, optimalCameraMatrix);
-
-    cout << cameraMatrix << endl;
-    cout << distortionCoefficients << endl;
-    cout << optimalCameraMatrix << endl;
 }
 
 void Calibration::loadCalibration(filesystem::path filepath) {
@@ -112,9 +108,7 @@ void Calibration::calibrate(vector<filesystem::path> imageFiles, Size boardSize)
 
     // optimize cameraMatrix
     if (!currentImage.empty()) {
-        cout << "Finding optimalCameraMatrix" << endl;
         optimalCameraMatrix = getOptimalNewCameraMatrix(cameraMatrix, distortionCoefficients, currentImage.size(), 1, currentImage.size());
-        cout << "Found optimalCameraMatrix" << endl;
 
         assert(optimalCameraMatrix.type() == CV_64FC1);
     } else {

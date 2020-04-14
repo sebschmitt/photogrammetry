@@ -7,10 +7,18 @@
 #include <opencv2/core.hpp>
 #include <filesystem>
 
+
+struct Color {
+    unsigned char Red;
+    unsigned char Green;
+    unsigned char Blue;
+};
+
 class ModelExporter {
     public:
         virtual void exportPointCloud(const std::filesystem::path& filepath,
-                                      const cv::Mat& worldPoints) = 0;
+                                      const cv::Mat& worldPoints,
+                                      const std::vector<Color>& colors) = 0;
         virtual void exportPointCloudSequence(const std::filesystem::path& filepath, Iterator<Scene::ImagePair>* imageSequence) = 0;
 
 };

@@ -44,10 +44,8 @@ void EssentialMatrix::determineEssentialMatrix(const vector<Point2f> &pointsCame
     vector<uchar> fundamentalMask;
     Mat1d fundametalMatrix = findFundamentalMat(pointsCamera1, pointsCamera2, FM_RANSAC, 0.1, 0.99, fundamentalMask);
 
-    cout << "points count: " << pointsCamera1.size() << endl;
     Mat1f inliners1 = homogenizePoints(applyMask<Point2f>(pointsCamera1, fundamentalMask));
     Mat1f inliners2 = homogenizePoints(applyMask<Point2f>(pointsCamera2, fundamentalMask));
-    cout << "inliers1 count: " << inliners1.cols << endl;
 
     Mat1d essentialMatrix = cameraCalibration.getInstrincs().t() * fundametalMatrix * cameraCalibration.getInstrincs();
 
