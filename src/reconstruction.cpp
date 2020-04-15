@@ -15,10 +15,8 @@ cv::Mat SceneReconstructor::getProjection(const cv::Mat &globalRotation, const c
 
 	// globalRotation.copyTo(projection(cv::Range(0, 3), cv::Range(0, 3)));
 	// globalTranslation.copyTo(projection(cv::Range(0, 3), cv::Range(3, 4)));
-	std::cout << globalRotation.t() << std::endl;
-	std::cout << -globalRotation.t() * globalTranslation << std::endl;
 	cv::hconcat(globalRotation.t(), -globalRotation.t() * globalTranslation, projection);
-	std::cout << projection << std::endl;
+	// cv::hconcat(globalRotation,  globalTranslation, projection);
 
 	return calibration.getCameraMatrix() * projection;
 }
@@ -89,15 +87,15 @@ void SceneReconstructor::reconstructScenes(Iterator<Scene::ImagePair>* pairSeque
 		// TODO: play around with parameters: https://docs.opencv.org/4.1.1/d9/d0c/group__calib3d.html#ga13f7e34de8fa516a686a56af1196247f
 		std::vector<uchar> matchMask;
 
-		cv::Mat essentialMatrix = cv::findEssentialMat(leftMatches, rightMatches, this->calibration.getCameraMatrix(), cv::LMEDS, 0.999, 1, matchMask);
+		cv::Mat essentialMatrix = cv::findEssentialMat(leftMatches, rightMatches, this->calibration.getCameraMatrix(), cv::RANSAC, 0.999, 3, matchMask);
 
 		// compute R and t from the essential matrix
 		// using https://docs.opencv.org/4.1.1/d9/d0c/group__calib3d.html#ga13f7e34de8fa516a686a56af1196247f
 		std::vector<uchar> poseMask;
 		cv::Mat localRotation, localTranslation;
-		int numberOfInliers = cv::recoverPose(essentialMatrix, leftMatches, rightMatches, calibration.getCameraMatrix(), localRotation, localTranslation, poseMask);
+		int numberOfInliers = cv::recoverPose(essentialMatrix, leftMatches, rightMatches, calibration.getCameraMatrix(), localRotation, localTranslation, matchMask);
 
-		combineMask(poseMask, matchMask);
+		// combineMask(poseMask, matchMask);
 
 		cv::Mat projection;
 		cv::Mat globalTransform;
@@ -129,6 +127,8 @@ void SceneReconstructor::reconstructScenes(Iterator<Scene::ImagePair>* pairSeque
 				worldPoints.at<float>(2, i) /= divisor;
 				worldPoints.at<float>(3, i) /= divisor;
 
+				std::cout << worldPoints.col(i) << std::endl;
+
 				usedKeypointIndexesForReconstruction.push_back(i);
 			} else {
 				// ensure that the keypoint is set to 0 for outliers
@@ -152,19 +152,20 @@ void SceneReconstructor::reconstructScenes(Iterator<Scene::ImagePair>* pairSeque
 				if (matchWorldPointPair == machtingWorldPoints.end())
 					break;
 
-				// TODO: the index to worldPoint Mapping is incorect, the indexes are wrong
 				cv::Point3f unscaledB = toPoint(worldPoints.col(matchWorldPointPair->first));
 				cv::Point3f scaledB = matchWorldPointPair->second;
 
-				// TODO: fix scaling issues
 				distances.push_back(std::make_tuple(getDistance(unscaledA, unscaledB), getDistance(scaledA, scaledB)));
 			}
 
 			double scale = 0;
+			std::vector<double> scales;
 			for (int i = 0; i < distances.size(); i++) {
 				if (std::get<1>(distances.at(i)) <= 0 || std::get<0>(distances.at(i)) <= 0) {
 					continue;
 				}
+				scales.push_back(std::get<1>(distances.at(i)) / std::get<0>(distances.at(i)));
+
 				scale += std::get<1>(distances.at(i)) / std::get<0>(distances.at(i));
 			}
 
@@ -186,10 +187,5 @@ void SceneReconstructor::reconstructScenes(Iterator<Scene::ImagePair>* pairSeque
 
 			currentScene->setReconstruction(projection, globalTransform, worldPoints, matchMask);
 		}
-
-
-		// triagnulation complete
-		// store results
-		// TODO: ensure right variables are used
 	}
 }

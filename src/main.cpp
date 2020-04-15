@@ -118,11 +118,9 @@ int main(int argc, char *argv[]) {
         inputImagePaths.push_back(entry.path());
     }
 
-    string testFolder = "./resources/ps4_controller";
-    // string testFolder = "./resources/pokemon_ball";
 
     SequenceMatcher sequenceMatcher(calb);
-    Scene::SceneSequence sequence = sequenceMatcher.generateSequence(testFolder);
+    Scene::SceneSequence sequence = sequenceMatcher.generateSequence(a_matchImages.getValue<string>());
 
     SceneReconstructor reconstructor(calb);
     reconstructor.reconstructScenes(sequence.createIterator());

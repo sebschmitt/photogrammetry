@@ -30,6 +30,12 @@ void PlyModelExporter::exportPointCloudSequence(const filesystem::path& filepath
                 colors.push_back(Color{ 0, 255, 0 });
             if (index == 2)
                 colors.push_back(Color{ 0, 0, 255 });
+            if (index == 3)
+                colors.push_back(Color{ 0, 0, 255 });
+            if (index == 4)
+                colors.push_back(Color{ 0, 0, 255 });
+            if (index > 4)
+                colors.push_back(Color{ 0, 0, 255 });
         }
         index++;
         cv::hconcat(worldPoints, points, worldPoints);

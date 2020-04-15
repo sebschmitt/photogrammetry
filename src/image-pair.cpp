@@ -131,8 +131,8 @@ namespace Scene {
 		size_t worldPointIndex = 0;
 		for (size_t matchIndex = 0; matchIndex < reconstructionMask.size(); matchIndex++) {
 			if (reconstructionMask.at(matchIndex)) {
-				if ((this->worldPoints.at<float>(2, worldPointIndex) > 0 && this->worldPoints.at<float>(2, worldPointIndex) < 0) ||
-					 this->worldPoints.at<float>(2, worldPointIndex) < 0 && this->worldPoints.at<float>(2, worldPointIndex) > 0) {
+				if ((worldPoints.at<float>(2, matchIndex) > 0 && worldPoints.at<float>(3, matchIndex) < 0) ||
+					 worldPoints.at<float>(2, matchIndex) < 0 && worldPoints.at<float>(3, matchIndex) > 0) {
 					reconstructionMask.at(matchIndex) == 0;
 					continue;
 				}
