@@ -135,21 +135,30 @@ void SceneReconstructor::reconstructScenes(Iterator<Scene::ImagePair>* pairSeque
 				matchMask.at(i) = 0;
 			}
 		}
+		std::cout << "triangulated " << usedKeypointIndexesForReconstruction.size() << " Points" << std::endl;
 
 		if (currentScene->isFirstImagePair())
 			currentScene->setReconstruction(projection, globalTransform, worldPoints, matchMask);
 		else {
-			std::map<size_t, cv::Point3f> machtingWorldPoints = currentScene->getMatchingWorldPoints(usedKeypointIndexesForReconstruction);
+			std::map<size_t, cv::Point3f> matchingWorldPoints = currentScene->getMatchingWorldPoints(usedKeypointIndexesForReconstruction);
 			std::vector<std::tuple<double, double>> distances;
 
-			auto matchWorldPointPair = machtingWorldPoints.begin();
-			while(matchWorldPointPair != machtingWorldPoints.end()) {
+
+			std::cout << "Found " << matchingWorldPoints.size() << " overlapping worldpoints." << std::endl;
+
+			if (matchingWorldPoints.size() < 2) {
+				std::cerr << "Not enought points were found for scaling. Stopping reconstruction." << std::endl;
+				break;
+			}
+
+			auto matchWorldPointPair = matchingWorldPoints.begin();
+			while(matchWorldPointPair != matchingWorldPoints.end()) {
 
 				cv::Point3f unscaledA = toPoint(worldPoints.col(matchWorldPointPair->first));
 				cv::Point3f scaledA = matchWorldPointPair->second;
 
 				matchWorldPointPair++;
-				if (matchWorldPointPair == machtingWorldPoints.end())
+				if (matchWorldPointPair == matchingWorldPoints.end())
 					break;
 
 				cv::Point3f unscaledB = toPoint(worldPoints.col(matchWorldPointPair->first));

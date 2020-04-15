@@ -34,7 +34,7 @@ namespace Scene {
 
         cv::Mat1d projection;
         cv::Mat1d tranform;
-        cv::Mat1f worldPoints;
+        cv::Mat1f worldPoints = cv::Mat1f(0, 0);
         std::map<size_t, size_t> matchIdxToWorldPoint;
 
 

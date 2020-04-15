@@ -43,6 +43,7 @@ Scene::SceneSequence SequenceMatcher::generateSequence(std::filesystem::path fol
         image.name = imageEntry.path().string();
 
         try {
+            std::cout << "Loading " << imageEntry.path().string() << std::endl;
             // TODO: addtional testing for e.g image size, filetype etc.
             cv::Mat input = cv::imread(imageEntry.path().string());
 
