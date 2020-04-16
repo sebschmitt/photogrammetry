@@ -32,11 +32,11 @@ int main(int argc, char *argv[]) {
     /* Calibration Arguments */
     argparser::Argument a_loadCalibration("loadcalibration", "Filepath to load calibration from");
     argparser::Argument a_saveCalibration("savecalibration", "Filepath to save calibration to");
-    argparser::Argument a_calibrationImages("calibrationImages", "Images for Calibration");
+    argparser::Argument a_calibrationImages("calibrationImages", "Folder with images for calibration");
     argparser::Argument a_calibrationCalibrateRow("calibrateRow", "corners row for Calibration");
     argparser::Argument a_calibrationCalibrateColumn("calibrateColumn", "corners column for Calibration");
 
-    argparser::Argument a_matchImages("matchImages", "Images to use for matching");
+    argparser::Argument a_matchImages("matchImages", "Folder with images to match");
     argparser::Argument a_outFile("out", "Output file");
 
 
