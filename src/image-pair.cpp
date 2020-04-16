@@ -28,6 +28,9 @@ namespace Scene {
 
 		// create mapping of keypoint to the respective match only for the right image
 		for (size_t index = 0; index < matchedKeypointsRight.size(); index++) {
+			if (rightKeypointsToMatch.count(matchedKeypointsRight[index]) > 0) {
+				std::cout << "keypoint has multiple matches" << std::endl;
+			}
 			rightKeypointsToMatch[matchedKeypointsRight[index]] = index;
 		}
 	}
@@ -132,8 +135,8 @@ namespace Scene {
 		for (size_t matchIndex = 0; matchIndex < reconstructionMask.size(); matchIndex++) {
 			if (reconstructionMask.at(matchIndex)) {
 				if ((worldPoints.at<float>(2, matchIndex) > 0 && worldPoints.at<float>(3, matchIndex) < 0) ||
-					 worldPoints.at<float>(2, matchIndex) < 0 && worldPoints.at<float>(3, matchIndex) > 0) {
-					reconstructionMask.at(matchIndex) == 0;
+					(worldPoints.at<float>(2, matchIndex) < 0 && worldPoints.at<float>(3, matchIndex) > 0)) {
+					reconstructionMask.at(matchIndex) = 0;
 					continue;
 				}
 				float divisor = worldPoints.at<float>(3, matchIndex);

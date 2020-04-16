@@ -127,7 +127,7 @@ void SceneReconstructor::reconstructScenes(Iterator<Scene::ImagePair>* pairSeque
 				worldPoints.at<float>(2, i) /= divisor;
 				worldPoints.at<float>(3, i) /= divisor;
 
-				std::cout << worldPoints.col(i) << std::endl;
+				// std::cout << worldPoints.col(i) << std::endl;
 
 				usedKeypointIndexesForReconstruction.push_back(i);
 			} else {

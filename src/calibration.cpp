@@ -38,7 +38,8 @@ void Calibration::saveCalibration(filesystem::path filepath) {
 }
 
 void Calibration::undistortImage(const Mat& image, Mat& undistortedImage) {
-    undistort(image, undistortedImage, cameraMatrix, distortionCoefficients, optimalCameraMatrix);
+    // undistort(image, undistortedImage, cameraMatrix, distortionCoefficients, optimalCameraMatrix);
+    cv::undistort(image, undistortedImage, cameraMatrix, distortionCoefficients);
 }
 
 void Calibration::loadCalibration(filesystem::path filepath) {
