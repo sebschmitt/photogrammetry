@@ -79,9 +79,9 @@ void PlyModelExporter::writeHeader(ofstream& outputfile, const Mat& vertices) {
     outputfile << "property float x" << endl;
     outputfile << "property float y" << endl;
     outputfile << "property float z" << endl;
-    outputfile << "property uchar red" << endl;
-    outputfile << "property uchar green" << endl;
-    outputfile << "property uchar blue" << endl;
+    //outputfile << "property uchar red" << endl;
+    //outputfile << "property uchar green" << endl;
+    //outputfile << "property uchar blue" << endl;
     /* outputfile << "element face 7" << endl; */
     /* outputfile << "property list uchar int vertex_index" << endl; */
     /* outputfile << "element edge 5" << endl; */
@@ -97,10 +97,10 @@ void PlyModelExporter::writeVertexList(ofstream& outputfile, const Mat& vertices
     for (size_t col = 0; col < vertices.cols; col++) {
         outputfile << vertices.at<float>(0, col) << " ";
         outputfile << vertices.at<float>(1, col) << " ";
-        outputfile << vertices.at<float>(2, col) << " ";
-        outputfile << (int) colors.at(col).Red << " ";
-        outputfile << (int) colors.at(col).Green << " ";
-        outputfile << (int) colors.at(col).Blue << endl;
+        outputfile << vertices.at<float>(2, col) << std::endl;
+        //outputfile << (int) colors.at(col).Red << " ";
+        //outputfile << (int) colors.at(col).Green << " ";
+        //outputfile << (int) colors.at(col).Blue << endl;
     }
 
 }

@@ -170,7 +170,7 @@ Scene::SceneSequence SequenceMatcher::generateSequence(std::filesystem::path fol
             cv::drawMatches(leftImage.image, leftImage.keypoints, rightImage.image, rightImage.keypoints, maskedMatches, canvas);
 
             std::stringstream imgNameStream;
-            imgNameStream << "./resources/ipad/hase/image " << leftImageIndex << " on " << rightImageIndex << " " << matches.size() << " " << maskedMatches.size() << ".jpg";
+            imgNameStream << "./resources/matches/image " << leftImageIndex << " on " << rightImageIndex << " " << matches.size() << " " << maskedMatches.size() << ".jpg";
             std::string imgName = imgNameStream.str();
 
             cv::imwrite(imgName, canvas);
