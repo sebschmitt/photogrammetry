@@ -9,6 +9,8 @@
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/calib3d.hpp>
 
+const int IMAGE_DOWNSAMPLE = 2;
+
 class Calibration {
 
 private:	

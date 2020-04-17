@@ -46,8 +46,9 @@ Scene::SceneSequence SequenceMatcher::generateSequence(std::filesystem::path fol
             std::cout << "Loading " << imageEntry.path().string() << std::endl;
             // TODO: addtional testing for e.g image size, filetype etc.
             cv::Mat input = cv::imread(imageEntry.path().string());
-
             assert(!input.empty());
+
+            resize(input, input, input.size() / IMAGE_DOWNSAMPLE);
 
             // cv::cvtColor(input, input, cv::COLOR_BGR2GRAY);
 
