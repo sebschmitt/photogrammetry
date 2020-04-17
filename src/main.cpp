@@ -1,6 +1,6 @@
 #include "feature-matching.hpp"
 #include "calibration.hpp"
-#include "essentialMatrix.hpp" 
+#include "essentialMatrix.hpp"
 
 #include <string>
 #include <filesystem>
@@ -12,10 +12,7 @@
 #include <sequence-matcher.hpp>
 #include <reconstruction.hpp>
 
-
-
 using namespace std;
-
 
 int main(int argc, char *argv[]) {
     argparser::ArgumentParser parser("yapgt (yet another photogrammetry tool)");
@@ -29,6 +26,7 @@ int main(int argc, char *argv[]) {
 
     argparser::Argument a_matchImages("matchImages", "Images to use for matching");
     argparser::Argument a_outFile("out", "Output file");
+    argparser::Argument a_matchOutputDir("matchOutput", "Folder to store match images in");
 
 
     parser.addArgument(&a_loadCalibration);
@@ -38,9 +36,10 @@ int main(int argc, char *argv[]) {
     parser.addArgument(&a_calibrationCalibrateColumn);
     parser.addArgument(&a_matchImages);
     parser.addArgument(&a_outFile);
+    parser.addArgument(&a_matchOutputDir);
 
     parser.parseArguments(argc, argv);
-    
+
     // iphone test
     Calibration calb = Calibration();
 
@@ -97,16 +96,17 @@ int main(int argc, char *argv[]) {
     }
 
     if (a_saveCalibration.isFound()) {
-         calb.saveCalibration(filesystem::path(a_saveCalibration.getValue<string>()));
+        filesystem::path saveCalibrationFilePath(a_saveCalibration.getValue<string>());
+        filesystem::path outFileFolder = saveCalibrationFilePath.parent_path();
+        if (!filesystem::exists(outFileFolder) || !filesystem::is_directory(outFileFolder)) {
+            if (!filesystem::create_directories(outFileFolder)) {
+                cout << "Could not create directory for " << a_saveCalibration.getName() << endl;
+                return -1;
+            }
+        }
+
+        calb.saveCalibration(saveCalibrationFilePath);
     }
-
-    /* Prototype for later use */
-    // if (a_matchImages.isFound()) {
-        // for (const auto& entry : filesystem::directory_iterator(a_matchImages.getValue<string>())) {
-        // }
-    // }
-
-
 
     if (!a_matchImages.isFound()) { // TODO proper handling?
         cout << "Argument " << a_matchImages.getName() << " was not found" << endl;
@@ -119,28 +119,44 @@ int main(int argc, char *argv[]) {
     }
 
 
-    filesystem::path path(a_matchImages.getValue<string>());
-
-    if (!filesystem::exists(path) || !filesystem::is_directory(path)) {
+    filesystem::path matchImagesPath(a_matchImages.getValue<string>());
+    if (!filesystem::exists(matchImagesPath) || !filesystem::is_directory(matchImagesPath)) {
         cout << "Value supplied for " << a_matchImages.getName() << " is not a valid path" << endl;
         return -1;
     }
 
     // TODO: validate file format
     std::vector<filesystem::path> inputImagePaths;
-    for (const auto& entry : filesystem::directory_iterator(path)) {
+    for (const auto& entry : filesystem::directory_iterator(matchImagesPath)) {
         inputImagePaths.push_back(entry.path());
     }
 
+    filesystem::path matchOutputPath(a_matchOutputDir.getValue<string>());
+    if (!filesystem::exists(matchOutputPath)) {
+        if (!filesystem::create_directories(matchOutputPath)) {
+            cout << "Could not create directory for " << a_matchOutputDir.getName() << endl;
+            return -1;
+        }
+    }
 
     SequenceMatcher sequenceMatcher(calb);
-    Scene::SceneSequence sequence = sequenceMatcher.generateSequence(path);
+    Scene::SceneSequence sequence = sequenceMatcher.generateSequence(matchImagesPath, matchOutputPath);
 
     SceneReconstructor reconstructor(calb);
     reconstructor.reconstructScenes(sequence.createIterator());
 
+
+    filesystem::path outputFilePath(a_outFile.getValue<string>());
+    filesystem::path outputFileFolder = outputFilePath.parent_path();
+    if (!filesystem::exists(outputFileFolder) || !filesystem::is_directory(outputFileFolder)) {
+        if (!filesystem::create_directories(outputFileFolder)) {
+            cout << "Could not create directory for " << a_outFile.getName() << endl;
+            return -1;
+        }
+    }
+
     PlyModelExporter exporter;
-    exporter.exportPointCloudSequence(a_outFile.getValue<string>(), sequence.createIterator());
+    exporter.exportPointCloudSequence(outputFilePath, sequence.createIterator());
 
     return 0;
 }

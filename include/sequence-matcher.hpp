@@ -26,7 +26,7 @@ private:
 public:
     SequenceMatcher(Calibration calibration);
 
-    Scene::SceneSequence generateSequence(std::filesystem::path folderpath);
+    Scene::SceneSequence generateSequence(std::filesystem::path folderpath, std::filesystem::path matchOutputDirectory);
  };
 
 
