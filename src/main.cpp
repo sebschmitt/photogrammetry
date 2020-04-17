@@ -18,12 +18,6 @@ using namespace std;
 
 
 int main(int argc, char *argv[]) {
-
-
-    
-
-
-
     argparser::ArgumentParser parser("yapgt (yet another photogrammetry tool)");
 
     /* Calibration Arguments */
@@ -51,21 +45,34 @@ int main(int argc, char *argv[]) {
     Calibration calb = Calibration();
 
     if (!(a_loadCalibration.isFound() || a_calibrationImages.isFound())) {
-        cout << "Neither " << a_loadCalibration.getName() << " nor " << a_loadCalibration.getName() << " was supplied" << endl;
+        cout << "Neither " << a_loadCalibration.getName() << " nor " << a_calibrationImages.getName() << " was supplied" << endl;
         return -1;
     }
 
     if (a_loadCalibration.isFound() && a_calibrationImages.isFound()) {
-        cout << "You can't use  " << a_loadCalibration.getName() << " and " << a_loadCalibration.getName() << " at the same time" << endl;
+        cout << "You can't use  " << a_loadCalibration.getName() << " and " << a_calibrationImages.getName() << " at the same time" << endl;
         return -1;
     }
 
     if (a_loadCalibration.isFound()) {
-        calb.loadCalibration(filesystem::path(a_loadCalibration.getValue<string>()));
+        filesystem::path path(a_loadCalibration.getValue<string>());
+
+        if (!filesystem::exists(path) || !filesystem::is_regular_file(path)) {
+            cout << "Value supplied for " << a_loadCalibration.getName() << " is not a valid path" << endl;
+            return -1;
+        }
+
+        calb.loadCalibration(path);
     }
 
     if (a_calibrationImages.isFound()) {
         filesystem::path path(a_calibrationImages.getValue<string>());
+
+        if (!filesystem::exists(path) || !filesystem::is_directory(path)) {
+            cout << "Value supplied for " << a_calibrationImages.getName() << " is not a valid path" << endl;
+            return -1;
+        }
+
         vector<filesystem::path> filepaths;
         for (const auto& entry : filesystem::directory_iterator(path)) {
             filepaths.push_back(entry.path());
@@ -112,15 +119,22 @@ int main(int argc, char *argv[]) {
     }
 
 
+    filesystem::path path(a_matchImages.getValue<string>());
+
+    if (!filesystem::exists(path) || !filesystem::is_directory(path)) {
+        cout << "Value supplied for " << a_matchImages.getName() << " is not a valid path" << endl;
+        return -1;
+    }
+
     // TODO: validate file format
     std::vector<filesystem::path> inputImagePaths;
-    for (const auto& entry : filesystem::directory_iterator(a_matchImages.getValue<string>())) {
+    for (const auto& entry : filesystem::directory_iterator(path)) {
         inputImagePaths.push_back(entry.path());
     }
 
 
     SequenceMatcher sequenceMatcher(calb);
-    Scene::SceneSequence sequence = sequenceMatcher.generateSequence(a_matchImages.getValue<string>());
+    Scene::SceneSequence sequence = sequenceMatcher.generateSequence(path);
 
     SceneReconstructor reconstructor(calb);
     reconstructor.reconstructScenes(sequence.createIterator());
