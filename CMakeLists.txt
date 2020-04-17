@@ -3,21 +3,14 @@ cmake_minimum_required(VERSION 3.15)
 # set project name
 project(yapgt)
 
-# generate compilation database for YouCompleteMe
-# option(CMAKE_EXPORT_COMPILE_COMMANDS "Generate compile_commands.json in build directory" ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(JSON_BuildTests OFF CACHE INTERNAL "")
-
 # search for opencv and make it a required depenency
+set(OPENCV_STATIC ON)
 find_package(OpenCV REQUIRED)
 
-
 # add the include folder for the header files
-# target_include_directories(OpenCVTest PRIVATE ./include)
 include_directories(include)
-
-# add_subdirectory(third-party/json)
 
 # create the variable SOURCES, which is a list of all source and header files
 set(SOURCES 
@@ -28,6 +21,7 @@ set(SOURCES
         src/ply-model-exporter.cpp
         src/essential-matrix.cpp
         src/argparser.cpp
+        src/reconstruction.cpp
         src/image-pair.cpp 
         src/argparser.cpp
         src/sequence-matcher.cpp
@@ -38,7 +32,7 @@ set(SOURCES
 add_executable(yapgt ${SOURCES})
 
 # add the link from the opencv libs
-target_link_libraries(yapgt PRIVATE ${OpenCV_LIBS})
+target_link_libraries(yapgt ${OpenCV_LIBS})
 
 # Enable C++ 17 Standard
 set_target_properties(yapgt PROPERTIES
@@ -46,3 +40,8 @@ set_target_properties(yapgt PROPERTIES
         CXX_STANDARD_REQUIRED ON
         CXX_EXTENSIONS OFF
 )
+
+# copy every linked opencv library to the binary directory
+foreach(CVLib ${OpenCV_LIBS})
+    file(COPY ${_OpenCV_LIB_PATH}/${CVLib}${OpenCV_VERSION_MAJOR}${OpenCV_VERSION_MINOR}${OpenCV_VERSION_PATCH}d.dll DESTINATION ${CMAKE_BINARY_DIR})
+endforeach()

@@ -18,12 +18,12 @@ bool Scene::ImageSequenceIterator::hasNext() {
 	return nextNode != nullptr;
 }
 
-Scene::ImagePair Scene::ImageSequenceIterator::next() {
+Scene::ImagePair *Scene::ImageSequenceIterator::next() {
 	if (!hasNext())
 		throw std::out_of_range("Iterator has no next element.");
 
-	ImagePair output = *nextNode;
+	currentNode = nextNode;
 	nextNode = nextNode->nextPair;
 
-	return output;
+	return currentNode;
 }

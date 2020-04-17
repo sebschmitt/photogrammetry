@@ -12,12 +12,13 @@ namespace Scene {
     class ImageSequenceIterator : public Iterator<ImagePair> {
     private:
 		ImagePair* nextNode = nullptr;
+		ImagePair* currentNode = nullptr;
 
 	public:
 		ImageSequenceIterator(ImagePair* head);
 
 		bool hasNext() override;
-		ImagePair next() override;
+		ImagePair *next() override;
 	};
 }
 

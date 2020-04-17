@@ -17,11 +17,16 @@
 #include <vector>
 #include <opencv2/calib3d.hpp>
 #include <opencv2/highgui.hpp>
+#include <opencv2\imgproc.hpp>
 
 
 
-Scene::SceneSequence SequenceMatcher::generateSequence(std::filesystem::path folderPath) {
+SequenceMatcher::SequenceMatcher(Calibration calibration) {
+    this->calibration = calibration;
+}
 
+Scene::SceneSequence SequenceMatcher::generateSequence(std::filesystem::path folderPath, std::filesystem::path matchOutputDirectory) {
+    bool outputMatches = std::filesystem::exists(folderPath) && std::filesystem::is_directory(folderPath);
     ImageContainer leftBestMatch, rightBestMatch;
     int bestMatchCount = 0;
 
@@ -38,9 +43,18 @@ Scene::SceneSequence SequenceMatcher::generateSequence(std::filesystem::path fol
         image.name = imageEntry.path().string();
 
         try {
+            std::cout << "Loading " << imageEntry.path().string() << std::endl;
             // TODO: addtional testing for e.g image size, filetype etc.
-            image.image = cv::imread(imageEntry.path().string());
-            assert(!image.image.empty());
+            cv::Mat input = cv::imread(imageEntry.path().string());
+
+            assert(!input.empty());
+
+            // cv::cvtColor(input, input, cv::COLOR_BGR2GRAY);
+
+            // apply histogram filter to incease contrast
+            //cv::equalizeHist(input, input);
+
+            calibration.undistortImage(input, image.image);
         }
         catch (const cv::Exception e) {
             std::cerr << "Failed to open the file " << image.name << ". Error Message: " << e.msg << std::endl;
@@ -79,13 +93,15 @@ Scene::SceneSequence SequenceMatcher::generateSequence(std::filesystem::path fol
     // match each image with each other.
     for (size_t leftImageIndex=0; leftImageIndex < images.size()-1; leftImageIndex++) {
         ImageContainer &leftImage = images[leftImageIndex];
-        std::cout << "Matching Image " << leftImageIndex << std::endl;
 
-        for (size_t rightImageIndex=leftImageIndex+1; rightImageIndex < images.size(); rightImageIndex++) {
+        size_t rightImageIndex = leftImageIndex + 1;
+        // for (size_t rightImageIndex=leftImageIndex+1; rightImageIndex < images.size(); rightImageIndex++) {
 			ImageContainer &rightImage = images[rightImageIndex];
 
-            if (leftImageIndex == rightImageIndex)
-                continue;
+			std::cout << "Matching Image " << leftImage.name << " on " << rightImage.name << ": ";
+
+            // if (leftImageIndex == rightImageIndex)
+            //    continue;
 
             std::vector<cv::Point2f> leftImagePoints, rightImagePoints;
             std::vector<size_t> leftKeypointIndexes, rightKeypointIndexes;
@@ -96,7 +112,7 @@ Scene::SceneSequence SequenceMatcher::generateSequence(std::filesystem::path fol
             // enable normal machting
             matcher->match(leftImage.descriptors, rightImage.descriptors, matches);
 
-            // used for normal matcher
+             //used for normal matcher
             for (auto& match : matches) {
 				leftImagePoints.push_back(leftImage.keypoints[match.queryIdx].pt);
 				rightImagePoints.push_back(rightImage.keypoints[match.trainIdx].pt);
@@ -106,54 +122,63 @@ Scene::SceneSequence SequenceMatcher::generateSequence(std::filesystem::path fol
             }
 
             // use with knnMatching 
-            // std::vector<std::vector<cv::DMatch>> knnMatches;
-            // matcher->knnMatch(leftImage.descriptors, rightImage.descriptors, knnMatches, 2);
+            //std::vector<std::vector<cv::DMatch>> knnMatches;
+            //matcher->knnMatch(leftImage.descriptors, rightImage.descriptors, knnMatches, 2);
             
             // use wiht knnMathcing and crossCheck
             // matcher->knnMatch(leftImage.descriptors, rightImage.descriptors, knnMatches, 1);
 
             // use with general knnMatching
-            // for (auto& match : knnMatches) {
+            //for (auto& match : knnMatches) {
                 // knnMatch with ratio test
                 //if (match[0].distance < 0.7 * match[1].distance) {
              
                 // knnMatch with cross check
                 // if (match.size()) {
-                     // leftImagePoints.push_back(leftImage.keypoints[match[0].queryIdx].pt);
-                     // rightImagePoints.push_back(rightImage.keypoints[match[0].trainIdx].pt);
 
-                     // leftKeypointIndexes.push_back(match[0].queryIdx);
-                     // rightKeypointIndexes.push_back(match[0].trainIdx);
+                     //leftImagePoints.push_back(leftImage.keypoints[match[0].queryIdx].pt);
+                     //rightImagePoints.push_back(rightImage.keypoints[match[0].trainIdx].pt);
 
-                    // matches.push_back(match[0]);
-                // }
-            // }
+                     //leftKeypointIndexes.push_back(match[0].queryIdx);
+                     //rightKeypointIndexes.push_back(match[0].trainIdx);
+
+            //         matches.push_back(match[0]);
+            //    }
+            //}
 
             // create fundamental mask for further constrains
             std::vector<uchar> mask;
-            cv::findFundamentalMat(leftImagePoints, rightImagePoints, cv::FM_RANSAC, 3, 0.99, mask);
+            cv::findFundamentalMat(leftImagePoints, rightImagePoints, cv::FM_RANSAC, 1, 0.999, mask);
 
             std::vector<cv::DMatch> maskedMatches;
 
             // add masked matches to the keyppoint mappings of both images
-            for (size_t kpIndex = 0; kpIndex < mask.size(); kpIndex++) {
+            int matchCount = 0;
+            for (size_t kpIndex = 0; kpIndex < leftImagePoints.size(); kpIndex++) {
                 if (mask[kpIndex]) {
                     leftImage.keypointMatches[leftKeypointIndexes[kpIndex]][rightImageIndex] = rightKeypointIndexes[kpIndex];
                     rightImage.keypointMatches[rightKeypointIndexes[kpIndex]][leftImageIndex] = leftKeypointIndexes[kpIndex];
 
                     maskedMatches.push_back(matches[kpIndex]);
+                    matchCount++;
                 }
             }
 
-            cv::Mat canvas;
-            cv::drawMatches(leftImage.image, leftImage.keypoints, rightImage.image, rightImage.keypoints, maskedMatches, canvas);
+            std::cout << " found " << matchCount << " matches" << std::endl;
 
-            std::stringstream imgNameStream;
-            imgNameStream << "./resources/pokemon_normal_test/image " << leftImageIndex << " on " << rightImageIndex << " " << matches.size() << " " << maskedMatches.size() << ".jpg";
-            std::string imgName = imgNameStream.str();
+            if (outputMatches) {
+                cv::Mat canvas;
+                cv::drawMatches(leftImage.image, leftImage.keypoints, rightImage.image, rightImage.keypoints,
+                                maskedMatches, canvas);
 
-            cv::imwrite(imgName, canvas);
-        }
+                std::stringstream imgNameStream;
+                imgNameStream << matchOutputDirectory.string() << "/image " << leftImageIndex << " on " << rightImageIndex << " "
+                              << matches.size() << " " << maskedMatches.size() << ".jpg";
+                std::string imgName = imgNameStream.str();
+
+                cv::imwrite(imgName, canvas);
+            }
+        // }
     }
     std::cout << "Done" << std::endl;
 
@@ -169,11 +194,15 @@ Scene::SceneSequence SequenceMatcher::generateSequence(std::filesystem::path fol
         currentLeft = createImageFromContainer(images.at(imageIndex));
         currentRight = createImageFromContainer(images.at(imageIndex+1));
 
+        // todo: check that these indexes are correct
         this->getKeypointIndexes(images.at(imageIndex), imageIndex + 1, leftKeypointMatches, rightKeypointMatches);
 
-
         //Scene::ImagePair* pair = new Scene::ImagePair(currentLeft, currentRight, leftKeypointMatches, rightKeypointMatches);
-        sequence.append(new Scene::ImagePair(currentLeft, currentRight, leftKeypointMatches, rightKeypointMatches));
+
+        if (imageIndex == 0)
+			sequence.append(new Scene::ImagePair(currentLeft, currentRight, leftKeypointMatches, rightKeypointMatches, calibration));
+        else 
+			sequence.append(new Scene::ImagePair(currentLeft, currentRight, leftKeypointMatches, rightKeypointMatches));
     }
 
     return sequence;
