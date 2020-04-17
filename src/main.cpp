@@ -83,7 +83,16 @@ int main(int argc, char *argv[]) {
     }
 
     if (a_saveCalibration.isFound()) {
-         calb.saveCalibration(filesystem::path(a_saveCalibration.getValue<string>()));
+        filesystem::path saveCalibrationFilePath(a_saveCalibration.getValue<string>());
+        filesystem::path outFileFolder = saveCalibrationFilePath.parent_path();
+        if (!filesystem::exists(outFileFolder) || !filesystem::is_directory(outFileFolder)) {
+            if (!filesystem::create_directories(outFileFolder)) {
+                cout << "Could not create directory for " << a_saveCalibration.getName() << endl;
+                return -1;
+            }
+        }
+
+         calb.saveCalibration(saveCalibrationFilePath);
     }
 
     if (!a_matchImages.isFound()) { // TODO proper handling?
@@ -103,6 +112,13 @@ int main(int argc, char *argv[]) {
         inputImagePaths.push_back(entry.path());
     }
 
+    // TODO refactor after merge of #11
+    if (!filesystem::exists(a_matchOutputDir.getValue<string>())) {
+        if (!filesystem::create_directories(a_matchOutputDir.getValue<string>())) {
+            cout << "Could not create directory for " << a_matchOutputDir.getName() << endl;
+            return -1;
+        }
+    }
 
     SequenceMatcher sequenceMatcher(calb);
     Scene::SceneSequence sequence = sequenceMatcher.generateSequence(a_matchImages.getValue<string>(), a_matchOutputDir.getValue<string>());
@@ -110,8 +126,18 @@ int main(int argc, char *argv[]) {
     SceneReconstructor reconstructor(calb);
     reconstructor.reconstructScenes(sequence.createIterator());
 
+
+    filesystem::path outputFilePath(a_outFile.getValue<string>());
+    filesystem::path outFileFolder = outputFilePath.parent_path();
+    if (!filesystem::exists(outFileFolder) || !filesystem::is_directory(outFileFolder)) {
+        if (!filesystem::create_directories(outFileFolder)) {
+            cout << "Could not create directory for " << a_outFile.getName() << endl;
+            return -1;
+        }
+    }
+
     PlyModelExporter exporter;
-    exporter.exportPointCloudSequence(a_outFile.getValue<string>(), sequence.createIterator());
+    exporter.exportPointCloudSequence(outputFilePath, sequence.createIterator());
 
     return 0;
 }
