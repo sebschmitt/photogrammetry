@@ -12,18 +12,9 @@
 #include <sequence-matcher.hpp>
 #include <reconstruction.hpp>
 
-
-
 using namespace std;
 
-
 int main(int argc, char *argv[]) {
-
-
-    
-
-
-
     argparser::ArgumentParser parser("yapgt (yet another photogrammetry tool)");
 
     /* Calibration Arguments */
@@ -35,6 +26,7 @@ int main(int argc, char *argv[]) {
 
     argparser::Argument a_matchImages("matchImages", "Images to use for matching");
     argparser::Argument a_outFile("out", "Output file");
+    argparser::Argument a_matchOutputDir("matchOutput", "Folder to store match images in");
 
 
     parser.addArgument(&a_loadCalibration);
@@ -44,6 +36,7 @@ int main(int argc, char *argv[]) {
     parser.addArgument(&a_calibrationCalibrateColumn);
     parser.addArgument(&a_matchImages);
     parser.addArgument(&a_outFile);
+    parser.addArgument(&a_matchOutputDir);
 
     parser.parseArguments(argc, argv);
     
@@ -93,14 +86,6 @@ int main(int argc, char *argv[]) {
          calb.saveCalibration(filesystem::path(a_saveCalibration.getValue<string>()));
     }
 
-    /* Prototype for later use */
-    // if (a_matchImages.isFound()) {
-        // for (const auto& entry : filesystem::directory_iterator(a_matchImages.getValue<string>())) {
-        // }
-    // }
-
-
-
     if (!a_matchImages.isFound()) { // TODO proper handling?
         cout << "Argument " << a_matchImages.getName() << " was not found" << endl;
         return -1;
@@ -120,7 +105,7 @@ int main(int argc, char *argv[]) {
 
 
     SequenceMatcher sequenceMatcher(calb);
-    Scene::SceneSequence sequence = sequenceMatcher.generateSequence(a_matchImages.getValue<string>());
+    Scene::SceneSequence sequence = sequenceMatcher.generateSequence(a_matchImages.getValue<string>(), a_matchOutputDir.getValue<string>());
 
     SceneReconstructor reconstructor(calb);
     reconstructor.reconstructScenes(sequence.createIterator());
