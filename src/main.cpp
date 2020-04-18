@@ -19,11 +19,6 @@ using namespace std;
 
 int main(int argc, char *argv[]) {
 
-
-    
-
-
-
     argparser::ArgumentParser parser("yapgt (yet another photogrammetry tool)");
 
     /* Calibration Arguments */

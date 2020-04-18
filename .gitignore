@@ -427,3 +427,14 @@ MigrationBackup/
 
 #clion configuration file
 .idea
+/cmake-build-debug/CMakeFiles/3.16.5/CompilerIdC/CMakeCCompilerId.c
+/cmake-build-debug/CMakeFiles/3.16.5/CompilerIdCXX
+/cmake-build-debug/CMakeFiles/cmake.check_cache
+/cmake-build-debug/CMakeFiles/clion-log.txt
+/cmake-build-debug/CMakeFiles/3.16.5/CMakeSystem.cmake
+/cmake-build-debug/CMakeFiles/3.16.5/CMakeRCCompiler.cmake
+/cmake-build-debug/CMakeFiles/3.16.5/CMakeDetermineCompilerABI_CXX.bin
+/cmake-build-debug/CMakeFiles/3.16.5/CMakeDetermineCompilerABI_C.bin
+/cmake-build-debug/CMakeFiles/3.16.5/CMakeCXXCompiler.cmake
+/cmake-build-debug/CMakeFiles/3.16.5/CMakeCCompiler.cmake
+/cmake-build-debug/CMakeFiles/clion-environment.txt
