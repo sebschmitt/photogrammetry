@@ -18,8 +18,8 @@ int main(int argc, char *argv[]) {
     argparser::ArgumentParser parser("yapgt (yet another photogrammetry tool)");
 
     /* Calibration Arguments */
-    argparser::Argument a_loadCalibration("loadcalibration", "Filepath to load calibration from");
-    argparser::Argument a_saveCalibration("savecalibration", "Filepath to save calibration to");
+    argparser::Argument a_loadCalibration("loadCalibration", "Filepath to load calibration from");
+    argparser::Argument a_saveCalibration("saveCalibration", "Filepath to save calibration to");
     argparser::Argument a_calibrationImages("calibrationImages", "Folder with images for calibration");
     argparser::Argument a_calibrationCalibrateRow("calibrateRow", "corners row for Calibration");
     argparser::Argument a_calibrationCalibrateColumn("calibrateColumn", "corners column for Calibration");
