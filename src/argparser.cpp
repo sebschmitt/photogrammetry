@@ -61,6 +61,16 @@ namespace argparser {
         _arguments.push_back(argument);
     }
 
+    bool equalsIgnoreCase(const std::string& a, const std::string& b) {
+        if (a.length() != b.length()) return false;
+
+        for (int i = 0; i < a.length(); i++) {
+            // lowercase compare
+            if ((b.at(i) | 32) != (a.at(i) | 32)) return false;
+        }
+        return true;
+    }
+
     void ArgumentParser::parseArguments(int argc, char *argv[]) {
         if (argc == 1) return;
 
@@ -105,7 +115,7 @@ namespace argparser {
         for (auto &_argument : _arguments) {
             i = 0;
             for (const auto &all_name : all_names) {
-                if (_argument->getName() == all_name) {
+                if (equalsIgnoreCase(_argument->getName(), all_name)) {
                     _argument->_found = true;
                     _argument->value = all_values[i];
                 }
