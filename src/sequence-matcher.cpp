@@ -25,8 +25,8 @@ SequenceMatcher::SequenceMatcher(Calibration calibration) {
     this->calibration = calibration;
 }
 
-Scene::SceneSequence SequenceMatcher::generateSequence(std::filesystem::path folderPath) {
-
+Scene::SceneSequence SequenceMatcher::generateSequence(std::filesystem::path folderPath, std::filesystem::path matchOutputDirectory) {
+    bool outputMatches = std::filesystem::exists(folderPath) && std::filesystem::is_directory(folderPath);
     ImageContainer leftBestMatch, rightBestMatch;
     int bestMatchCount = 0;
 
@@ -167,14 +167,18 @@ Scene::SceneSequence SequenceMatcher::generateSequence(std::filesystem::path fol
 
             std::cout << " found " << matchCount << " matches" << std::endl;
 
-            cv::Mat canvas;
-            cv::drawMatches(leftImage.image, leftImage.keypoints, rightImage.image, rightImage.keypoints, maskedMatches, canvas);
+            if (outputMatches) {
+                cv::Mat canvas;
+                cv::drawMatches(leftImage.image, leftImage.keypoints, rightImage.image, rightImage.keypoints,
+                                maskedMatches, canvas);
 
-            std::stringstream imgNameStream;
-            imgNameStream << "./resources/matches/image " << leftImageIndex << " on " << rightImageIndex << " " << matches.size() << " " << maskedMatches.size() << ".jpg";
-            std::string imgName = imgNameStream.str();
+                std::stringstream imgNameStream;
+                imgNameStream << matchOutputDirectory.string() << "/image " << leftImageIndex << " on " << rightImageIndex << " "
+                              << matches.size() << " " << maskedMatches.size() << ".jpg";
+                std::string imgName = imgNameStream.str();
 
-            cv::imwrite(imgName, canvas);
+                cv::imwrite(imgName, canvas);
+            }
         // }
     }
     std::cout << "Done" << std::endl;
