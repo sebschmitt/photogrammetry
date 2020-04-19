@@ -108,55 +108,48 @@ int main(int argc, char *argv[]) {
         calb.saveCalibration(saveCalibrationFilePath);
     }
 
-    if (!a_matchImages.isFound()) { // TODO proper handling?
-        cout << "Argument " << a_matchImages.getName() << " was not found" << endl;
-        return -1;
-    }
-
-    if (!a_outFile.isFound()) { // TODO proper handling?
-        cout << "Argument " << a_outFile.getName() << " was not found" << endl;
-        return -1;
-    }
-
-
-    filesystem::path matchImagesPath(a_matchImages.getValue<string>());
-    if (!filesystem::exists(matchImagesPath) || !filesystem::is_directory(matchImagesPath)) {
-        cout << "Value supplied for " << a_matchImages.getName() << " is not a valid path" << endl;
-        return -1;
-    }
-
-    // TODO: validate file format
-    std::vector<filesystem::path> inputImagePaths;
-    for (const auto& entry : filesystem::directory_iterator(matchImagesPath)) {
-        inputImagePaths.push_back(entry.path());
-    }
-
-    filesystem::path matchOutputPath(a_matchOutputDir.getValue<string>());
-    if (!filesystem::exists(matchOutputPath)) {
-        if (!filesystem::create_directories(matchOutputPath)) {
-            cout << "Could not create directory for " << a_matchOutputDir.getName() << endl;
+    if (a_matchImages.isFound()) {
+        filesystem::path matchImagesPath(a_matchImages.getValue<string>());
+        if (!filesystem::exists(matchImagesPath) || !filesystem::is_directory(matchImagesPath)) {
+            cout << "Value supplied for " << a_matchImages.getName() << " is not a valid path" << endl;
             return -1;
         }
-    }
 
-    SequenceMatcher sequenceMatcher(calb);
-    Scene::SceneSequence sequence = sequenceMatcher.generateSequence(matchImagesPath, matchOutputPath);
+        // TODO: validate file format
+        std::vector<filesystem::path> inputImagePaths;
+        for (const auto &entry : filesystem::directory_iterator(matchImagesPath)) {
+            inputImagePaths.push_back(entry.path());
+        }
 
-    SceneReconstructor reconstructor(calb);
-    reconstructor.reconstructScenes(sequence.createIterator());
+        filesystem::path matchOutputPath(a_matchOutputDir.getValue<string>());
+        if (a_matchOutputDir.isFound() && !filesystem::exists(matchOutputPath)) {
+            if (!filesystem::create_directories(matchOutputPath)) {
+                cout << "Could not create directory for " << a_matchOutputDir.getName() << endl;
+                return -1;
+            }
+        }
+
+        SequenceMatcher sequenceMatcher(calb);
+        Scene::SceneSequence sequence = sequenceMatcher.generateSequence(matchImagesPath, matchOutputPath);
+
+        SceneReconstructor reconstructor(calb);
+        reconstructor.reconstructScenes(sequence.createIterator());
 
 
-    filesystem::path outputFilePath(a_outFile.getValue<string>());
-    filesystem::path outputFileFolder = outputFilePath.parent_path();
-    if (!filesystem::exists(outputFileFolder) || !filesystem::is_directory(outputFileFolder)) {
-        if (!filesystem::create_directories(outputFileFolder)) {
-            cout << "Could not create directory for " << a_outFile.getName() << endl;
-            return -1;
+        if (a_outFile.isFound()) {
+            filesystem::path outputFilePath(a_outFile.getValue<string>());
+            filesystem::path outputFileFolder = outputFilePath.parent_path();
+            if (!filesystem::exists(outputFileFolder) || !filesystem::is_directory(outputFileFolder)) {
+                if (!filesystem::create_directories(outputFileFolder)) {
+                    cout << "Could not create directory for " << a_outFile.getName() << endl;
+                    return -1;
+                }
+            }
+
+            PlyModelExporter exporter;
+            exporter.exportPointCloudSequence(outputFilePath, sequence.createIterator());
         }
     }
-
-    PlyModelExporter exporter;
-    exporter.exportPointCloudSequence(outputFilePath, sequence.createIterator());
 
     return 0;
 }
