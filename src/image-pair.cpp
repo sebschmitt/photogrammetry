@@ -3,6 +3,7 @@
 //
 
 #include "image-pair.hpp"
+#include "colors.hpp"
 
 #include <numeric>
 #include <iostream>
@@ -79,6 +80,18 @@ namespace Scene {
 
 	cv::Mat &ImagePair::getWorldPoints() {
 		return this->worldPoints;
+	}
+
+	std::vector<Colors::Color> ImagePair::getColors() {
+		std::vector<Colors::Color> colors;
+		for (auto& matchIndexWorldPointPair : matchIdxToWorldPoint) {
+			size_t matchIndex = matchIndexWorldPointPair.first;
+			size_t leftPointIndex = matchedKeypointsLeft.at(matchIndex);
+			size_t rightPointIndex = matchedKeypointsRight.at(matchIndex);
+
+			colors.push_back(Colors::ColorPicker::getAverageColor(leftImage.image, rightImage.image, leftImage.imagePoints.at(leftPointIndex), rightImage.imagePoints.at(rightPointIndex), 4));
+		}
+		return colors;
 	}
 
 	const cv::Mat ImagePair::getPreviousTransform() {

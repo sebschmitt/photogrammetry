@@ -7,8 +7,10 @@
 
 #include "image.hpp"
 #include "calibration.hpp"
+#include "colors.hpp"
 
 #include <opencv2/core.hpp>
+
 #include <map>
 #include <string>
 #include <tuple>
@@ -58,6 +60,7 @@ namespace Scene {
         cv::Mat getProjection();
         cv::Mat getTransform();
         cv::Mat& getWorldPoints();
+        std::vector<Colors::Color> getColors();
 
         const cv::Mat getPreviousTransform();
         cv::Mat getPreviousProjection();
@@ -65,6 +68,7 @@ namespace Scene {
         bool isFirstImagePair();
 
         void setReconstruction(cv::Mat projection, cv::Mat transform, cv::Mat worldPoints, std::vector<uchar> reconstructionMask);
+
     };
 
 

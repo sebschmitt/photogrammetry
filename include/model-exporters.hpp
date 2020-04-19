@@ -2,13 +2,14 @@
 #define MODEL_EXPORTERS_H
 
 #include "model-exporter.hpp"
+#include "colors.hpp"
 
 class PlyModelExporter : ModelExporter {
     
     public:
         void exportPointCloud(const std::filesystem::path& filepath,
                               const cv::Mat& worldPoints,
-                              const std::vector<Color>& colors) override;
+                              const std::vector<Colors::Color>& colors) override;
         void exportPointCloudSequence(const std::filesystem::path& filepath, Iterator<Scene::ImagePair>* imageSequence) override;
 
     private:
@@ -18,7 +19,7 @@ class PlyModelExporter : ModelExporter {
                          const cv::Mat& vertices);
         void writeVertexList(std::ofstream& outputfile,
                              const cv::Mat& vertices,
-                             const std::vector<Color> &colors);
+                             const std::vector<Colors::Color> &colors);
 
 };
 

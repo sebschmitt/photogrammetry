@@ -131,11 +131,14 @@ int main(int argc, char *argv[]) {
         inputImagePaths.push_back(entry.path());
     }
 
-    filesystem::path matchOutputPath(a_matchOutputDir.getValue<string>());
-    if (!filesystem::exists(matchOutputPath)) {
-        if (!filesystem::create_directories(matchOutputPath)) {
-            cout << "Could not create directory for " << a_matchOutputDir.getName() << endl;
-            return -1;
+
+	filesystem::path matchOutputPath(a_matchOutputDir.getValue<string>());
+    if (a_matchOutputDir.isFound()) {
+        if (!filesystem::exists(matchOutputPath)) {
+            if (!filesystem::create_directories(matchOutputPath)) {
+                cout << "Could not create directory for " << a_matchOutputDir.getName() << endl;
+                return -1;
+            }
         }
     }
 
