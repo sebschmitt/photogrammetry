@@ -26,7 +26,8 @@ set(SOURCES
         src/argparser.cpp
         src/sequence-matcher.cpp
         src/scene-sequence.cpp
-        src/imagepair-sequence-iterator.cpp)
+        src/imagepair-sequence-iterator.cpp
+        src/colors.cpp)
 
 # add the files from SOURCES to the executable
 add_executable(yapgt ${SOURCES})
