@@ -74,6 +74,7 @@ void Calibration::calibrate(vector<filesystem::path> imageFiles, Size boardSize)
     Mat currentImage;
     for (auto const& imagePath: imageFiles) {
         currentImage = imread(imagePath.string());
+        resize(currentImage, currentImage, currentImage.size() / IMAGE_DOWNSAMPLE);
         cvtColor(currentImage, currentImage, COLOR_BGR2GRAY);
 
         std::cout << "Trying to find corners in file " << imagePath.filename() << ": ";

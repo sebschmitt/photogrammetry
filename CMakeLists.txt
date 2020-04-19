@@ -32,6 +32,12 @@ set(SOURCES
 # add the files from SOURCES to the executable
 add_executable(yapgt ${SOURCES})
 
+# set options for linking static libraries when using MSVC 
+if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    target_compile_options(yapgt PRIVATE /MDd)
+    target_link_options(yapgt PRIVATE /INCREMENTAL:NO /NODEFAULTLIB:MSVCRT)
+endif()
+
 # add the link from the opencv libs
 target_link_libraries(yapgt ${OpenCV_LIBS})
 
