@@ -83,6 +83,14 @@ namespace Scene {
 	}
 
 	std::vector<Colors::Color> ImagePair::getColors() {
+
+		std::vector<size_t> matchIndexes;
+		for (auto it = matchIdxToWorldPoint.begin(); it != matchIdxToWorldPoint.end(); it++) {
+			matchIndexes.push_back(it->first);
+		}
+
+		std::sort(matchIndexes.begin(), matchIndexes.end());
+
 		std::vector<Colors::Color> colors;
 		for (auto& matchIndexWorldPointPair : matchIdxToWorldPoint) {
 			size_t matchIndex = matchIndexWorldPointPair.first;
