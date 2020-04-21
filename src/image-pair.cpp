@@ -138,7 +138,19 @@ namespace Scene {
 		this->projection = projection;//std::move(projection);
 		this->tranform = transform;//std::move(tranform);
 
-		int maxWorldPointCount = std::accumulate(reconstructionMask.begin(), reconstructionMask.end(), 0);
+		// count masked matches and check if z-Index is greater than 0
+		int maxWorldPointCount = 0;// std::accumulate(reconstructionMask.begin(), reconstructionMask.end(), 0);
+		for (size_t matchIndex = 0; matchIndex < reconstructionMask.size(); matchIndex++) {
+			if (reconstructionMask.at(matchIndex)) {
+				if ((worldPoints.at<float>(2, matchIndex) > 0 && worldPoints.at<float>(3, matchIndex) < 0) ||
+					(worldPoints.at<float>(2, matchIndex) < 0 && worldPoints.at<float>(3, matchIndex) > 0)) {
+					reconstructionMask.at(matchIndex) = 0;
+				}
+				else {
+					maxWorldPointCount++;
+				}
+			}
+		}
 
 		this->worldPoints = cv::Mat1f(3, maxWorldPointCount);
 
@@ -147,11 +159,11 @@ namespace Scene {
 		size_t worldPointIndex = 0;
 		for (size_t matchIndex = 0; matchIndex < reconstructionMask.size(); matchIndex++) {
 			if (reconstructionMask.at(matchIndex)) {
-				if ((worldPoints.at<float>(2, matchIndex) > 0 && worldPoints.at<float>(3, matchIndex) < 0) ||
-					(worldPoints.at<float>(2, matchIndex) < 0 && worldPoints.at<float>(3, matchIndex) > 0)) {
-					reconstructionMask.at(matchIndex) = 0;
-					continue;
-				}
+				//if ((worldPoints.at<float>(2, matchIndex) > 0 && worldPoints.at<float>(3, matchIndex) < 0) ||
+				//	(worldPoints.at<float>(2, matchIndex) < 0 && worldPoints.at<float>(3, matchIndex) > 0)) {
+				//	reconstructionMask.at(matchIndex) = 0;
+				//	continue;
+				//}
 				float divisor = worldPoints.at<float>(3, matchIndex);
 
 				this->worldPoints.at<float>(0, worldPointIndex) = worldPoints.at<float>(0, matchIndex) / divisor;
