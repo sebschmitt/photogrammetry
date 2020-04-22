@@ -30,7 +30,6 @@ void Calibration::saveCalibration(filesystem::path filepath) {
     
     cv::FileStorage fs(filepath.string(), cv::FileStorage::WRITE);
     fs << cameraMatrixSerName << cameraMatrix;
-    fs << optimalMatrixSerName << optimalCameraMatrix;
     fs << distortionCoefficientsSerName << distortionCoefficients;
     fs.release();
 
@@ -38,7 +37,6 @@ void Calibration::saveCalibration(filesystem::path filepath) {
 }
 
 void Calibration::undistortImage(const Mat& image, Mat& undistortedImage) {
-    // undistort(image, undistortedImage, cameraMatrix, distortionCoefficients, optimalCameraMatrix);
     cv::undistort(image, undistortedImage, cameraMatrix, distortionCoefficients);
 }
 
@@ -50,13 +48,11 @@ void Calibration::loadCalibration(filesystem::path filepath) {
 
     FileStorage fs(filepath.string(), FileStorage::READ);
     cameraMatrix = fs[cameraMatrixSerName].mat();
-    optimalCameraMatrix = fs[optimalMatrixSerName].mat();
     distortionCoefficients = fs[distortionCoefficientsSerName].mat();
     fs.release();
 
     assert(cameraMatrix.type() == CV_64FC1);
     assert(distortionCoefficients.type() == CV_64FC1);
-    assert(optimalCameraMatrix.type() == CV_64FC1);
 
     cout << "Successfully loaded calibration!" << endl;
 }
@@ -107,13 +103,4 @@ void Calibration::calibrate(vector<filesystem::path> imageFiles, Size boardSize)
     assert(distortionCoefficients.type() == CV_64FC1);
 
     cout << "Camera calibrated with output " << calibrationOutput << endl;
-
-    // optimize cameraMatrix
-    if (!currentImage.empty()) {
-        optimalCameraMatrix = getOptimalNewCameraMatrix(cameraMatrix, distortionCoefficients, currentImage.size(), 1, currentImage.size());
-
-        assert(optimalCameraMatrix.type() == CV_64FC1);
-    } else {
-        cout << "last images was empty. Failed to get image size." << endl;
-    }
 }
