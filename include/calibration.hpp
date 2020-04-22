@@ -20,7 +20,6 @@ private:
     std::vector<cv::Mat> translationVectors;
 
     std::string cameraMatrixSerName = "cameraMatrix";
-    std::string optimalMatrixSerName = "optimalMatrix";
     std::string distortionCoefficientsSerName = "distortionCoefficients";
 
 public:
