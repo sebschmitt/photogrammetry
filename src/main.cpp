@@ -8,7 +8,7 @@
 
 #include <iostream>
 
-#include "argparser.h"
+#include "argparser.hpp"
 #include <sequence-matcher.hpp>
 #include <reconstruction.hpp>
 

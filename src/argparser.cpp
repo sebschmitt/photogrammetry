@@ -2,7 +2,7 @@
 // Created by Sebastian Schmitt on 19.03.2020.
 //
 
-#include "argparser.h"
+#include "argparser.hpp"
 
 #include <utility>
 #include <iomanip>
