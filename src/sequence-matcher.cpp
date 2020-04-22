@@ -88,8 +88,8 @@ Scene::SceneSequence SequenceMatcher::generateSequence(std::filesystem::path fol
 
     // Use NORM_L1 or NORM_L2, because we are using SIFT 
     // enable cross check
-    cv::Ptr<cv::BFMatcher> matcher = cv::BFMatcher::create(cv::NORM_L1, true);
-    // cv::Ptr<cv::BFMatcher> matcher = cv::BFMatcher::create(cv::NORM_L1, false);
+    cv::Ptr<cv::BFMatcher> matcher = cv::BFMatcher::create(cv::NORM_L2, true);
+    // cv::Ptr<cv::BFMatcher> matcher = cv::BFMatcher::create(cv::NORM_L2, false);
 
     // match each image with each other.
     for (size_t leftImageIndex=0; leftImageIndex < images.size()-1; leftImageIndex++) {
@@ -113,7 +113,7 @@ Scene::SceneSequence SequenceMatcher::generateSequence(std::filesystem::path fol
             // enable normal machting
             matcher->match(leftImage.descriptors, rightImage.descriptors, matches);
 
-             //used for normal matcher
+            // used for normal matcher
             for (auto& match : matches) {
 				leftImagePoints.push_back(leftImage.keypoints[match.queryIdx].pt);
 				rightImagePoints.push_back(rightImage.keypoints[match.trainIdx].pt);
@@ -123,29 +123,29 @@ Scene::SceneSequence SequenceMatcher::generateSequence(std::filesystem::path fol
             }
 
             // use with knnMatching 
-            //std::vector<std::vector<cv::DMatch>> knnMatches;
-            //matcher->knnMatch(leftImage.descriptors, rightImage.descriptors, knnMatches, 2);
+            // std::vector<std::vector<cv::DMatch>> knnMatches;
+            // matcher->knnMatch(leftImage.descriptors, rightImage.descriptors, knnMatches, 2);
             
             // use wiht knnMathcing and crossCheck
             // matcher->knnMatch(leftImage.descriptors, rightImage.descriptors, knnMatches, 1);
 
             // use with general knnMatching
-            //for (auto& match : knnMatches) {
+            // for (auto& match : knnMatches) {
                 // knnMatch with ratio test
-                //if (match[0].distance < 0.7 * match[1].distance) {
+                // if (match[0].distance < 0.7 * match[1].distance) {
              
                 // knnMatch with cross check
-                // if (match.size()) {
+				// if (match.size()) {
 
-                     //leftImagePoints.push_back(leftImage.keypoints[match[0].queryIdx].pt);
-                     //rightImagePoints.push_back(rightImage.keypoints[match[0].trainIdx].pt);
+                     // leftImagePoints.push_back(leftImage.keypoints[match[0].queryIdx].pt);
+                     // rightImagePoints.push_back(rightImage.keypoints[match[0].trainIdx].pt);
 
-                     //leftKeypointIndexes.push_back(match[0].queryIdx);
-                     //rightKeypointIndexes.push_back(match[0].trainIdx);
+                     // leftKeypointIndexes.push_back(match[0].queryIdx);
+                     // rightKeypointIndexes.push_back(match[0].trainIdx);
 
-            //         matches.push_back(match[0]);
-            //    }
-            //}
+                     // matches.push_back(match[0]);
+                // }
+            // }
 
             // create fundamental mask for further constrains
             std::vector<uchar> mask;
