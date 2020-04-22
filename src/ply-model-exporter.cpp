@@ -20,12 +20,16 @@ void PlyModelExporter::exportPointCloudSequence(const filesystem::path& filepath
         Scene::ImagePair *currentScene = imageSequence->next();
 
         cv::Mat points = currentScene->getWorldPoints();
-        auto currentColors = currentScene->getColors();
-        colors.insert(colors.end(), currentColors.begin(), currentColors.end());
-
         
         if (points.cols == 0)
-            continue;
+            break;
+
+        auto currentColors = currentScene->getColors();
+
+        if (currentColors.size() != points.cols)
+            std::cout << "Number of colors and reconstructed points are not equal." << std::endl;
+
+        colors.insert(colors.end(), currentColors.begin(), currentColors.end());
 
         cv::hconcat(worldPoints, points, worldPoints);
     }
