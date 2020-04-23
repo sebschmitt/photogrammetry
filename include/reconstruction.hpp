@@ -14,15 +14,11 @@ class SceneReconstructor {
 	private:
 		Calibration calibration;
 		cv::Mat getProjection(const cv::Mat &R, const cv::Mat &t);
-		// cv::Mat getProjectionFromTransform(const cv::Mat &R, const cv::Mat &t, int scale = 1);
 		cv::Mat combineToTransformation(const cv::Mat &rotation, const cv::Mat &translation);
 		void getFromTransformation(const cv::Mat& transformation, cv::Mat &rotation, cv::Mat& translation);
 		cv::Point3f toPoint(cv::Mat &column);
 		double getDistance(cv::Point3f& pointA, cv::Point3f& pointB);
-		
 		void computPoseAndProjection(const cv::Mat& localRotation, const cv::Mat& localTranslation, const cv::Mat& prevTransform, cv::Mat& globalTransformation, cv::Mat& projection);
-
-		void combineMask(const std::vector<uchar>& input, std::vector<uchar> &output);
 
 	public:
 		SceneReconstructor(Calibration calibration);

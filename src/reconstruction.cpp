@@ -12,19 +12,16 @@ SceneReconstructor::SceneReconstructor(Calibration calibration) {
 
 cv::Mat SceneReconstructor::getProjection(const cv::Mat &globalRotation, const cv::Mat &globalTranslation) {
 	cv::Mat projection = cv::Mat(3, 4, CV_64FC1);
-
-	// globalRotation.copyTo(projection(cv::Range(0, 3), cv::Range(0, 3)));
-	// globalTranslation.copyTo(projection(cv::Range(0, 3), cv::Range(3, 4)));
-	cv::hconcat(globalRotation.t(), -globalRotation.t() * globalTranslation, projection);
-	// cv::hconcat(globalRotation,  globalTranslation, projection);
-
+	// copy rotation and translation into the matrix, multiply with K
+	cv::hconcat(globalRotation,  globalTranslation, projection);
 	return calibration.getCameraMatrix() * projection;
 }
 
-// create a 4x4 transform matrix using the given rotation and translation.
-// the resulting matrix has the form; [ R; 0 | t; 1]
 cv::Mat SceneReconstructor::combineToTransformation(const cv::Mat &rotation, const cv::Mat &translation) {
+	// create a 4x4 transform matrix using the given rotation and translation.
+	// the resulting matrix has the form; [ R; 0 | t; 1]
 	cv::Mat t = cv::Mat::eye(4, 4, CV_64FC1);
+
 	rotation.copyTo(t(cv::Range(0, 3), cv::Range(0, 3)));
 	translation.copyTo(t(cv::Range(0, 3), cv::Range(3, 4)));
 
@@ -54,24 +51,13 @@ double SceneReconstructor::getDistance(cv::Point3f& pointA, cv::Point3f& pointB)
 }
 
 void SceneReconstructor::computPoseAndProjection(const cv::Mat& localRotation, const cv::Mat& localTranslation, const cv::Mat& prevTransform, cv::Mat& globalTransformation, cv::Mat& projection) {
-		// cv::Mat previousTransform = currentScene.getPreviousTransform();
-		// cv::Mat localTransform = combineToTransformation(localRotation, localTranslation);
-		// cv::Mat globalTransform = previousTransform * localTransform;
-		 globalTransformation = prevTransform * combineToTransformation(localRotation,  localTranslation);
+		globalTransformation = prevTransform * combineToTransformation(localRotation,  localTranslation);
 
 		// compute the transformation for tranforming the current scene into the the coordinate system of the first scene
 		cv::Mat globalRotation, globalTranslation;
 		getFromTransformation(globalTransformation, globalRotation, globalTranslation);
 
 		projection = getProjection(globalRotation, globalTranslation);
-}
-
-void SceneReconstructor::combineMask(const std::vector<uchar>& input, std::vector<uchar> &output) {
-	assert(input.size() == output.size());
-	for (int i = 0; i < input.size(); i++) {
-		if (!input.at(i))
-			output.at(i) = 0;
-	}
 }
 
 void SceneReconstructor::reconstructScenes(Iterator<Scene::ImagePair>* pairSequence) {
@@ -119,7 +105,6 @@ void SceneReconstructor::reconstructScenes(Iterator<Scene::ImagePair>* pairSeque
 			currentScene->setReconstruction(projection, globalTransform, worldPoints, matchMask);
 		} else {
 			// normalize points
-			// std::vector<size_t> usedKeypointIndexesForReconstruction;
 			std::vector<size_t> usedKeypointIndexesForReconstruction;
 			for (int i = 0; i < worldPoints.cols; i++) {
 				// only continue with world points, which are inliers and have a positive z value
@@ -153,6 +138,7 @@ void SceneReconstructor::reconstructScenes(Iterator<Scene::ImagePair>* pairSeque
 				break;
 			}
 
+			// create pairs of points and mesure the distances
 			auto matchWorldPointPair = matchingWorldPoints.begin();
 			while (matchWorldPointPair != matchingWorldPoints.end()) {
 
@@ -169,9 +155,10 @@ void SceneReconstructor::reconstructScenes(Iterator<Scene::ImagePair>* pairSeque
 				distances.push_back(std::make_tuple(getDistance(unscaledA, unscaledB), getDistance(scaledA, scaledB)));
 			}
 
+			// compute the scale
 			double scale = 0;
 			std::vector<double> scales;
-			for (int i = 0; i < distances.size(); i++) {
+			for (int i = 0; i < distances.size()-1; i++) {
 				if (std::get<1>(distances.at(i)) <= 0 || std::get<0>(distances.at(i)) <= 0) {
 					continue;
 				}
@@ -184,17 +171,12 @@ void SceneReconstructor::reconstructScenes(Iterator<Scene::ImagePair>* pairSeque
 
 			worldPoints.release();
 
+			// recalculate translation and projection with the right scale
 			computPoseAndProjection(localRotation, localTranslation * scale, currentScene->getPreviousTransform(), globalTransform, projection);
 
 			projection.convertTo(currentProjection, CV_32FC1);
-			cv::triangulatePoints(previousProjection, currentProjection, leftMatches, rightMatches, worldPoints);
 
-			//cv::Mat filteredWorldPoints(3, usedKeypointIndexesForReconstruction.size(), CV_32FC1);
-			//for (int i = 0; i < scaledWorldPoints.cols; i++) {
-			//	filteredWorldPoints.at<float>(0, i) /= scaledWorldPoints.at<float>(3, i);
-			//	filteredWorldPoints.at<float>(1, i) /= scaledWorldPoints.at<float>(3, i);
-			//	filteredWorldPoints.at<float>(2, i) /= scaledWorldPoints.at<float>(3, i);
-			//}
+			cv::triangulatePoints(previousProjection, currentProjection, leftMatches, rightMatches, worldPoints);
 
 			currentScene->setReconstruction(projection, globalTransform, worldPoints, matchMask);
 		}
