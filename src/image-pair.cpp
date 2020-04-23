@@ -182,6 +182,7 @@ namespace Scene {
 				worldPointIndex++;
 			}
 		}
+		std::cout << "Reoncstructed " << worldPointIndex << " points." << std::endl;
 	}
 
 

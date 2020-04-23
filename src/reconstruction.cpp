@@ -75,8 +75,12 @@ void SceneReconstructor::combineMask(const std::vector<uchar>& input, std::vecto
 }
 
 void SceneReconstructor::reconstructScenes(Iterator<Scene::ImagePair>* pairSequence) {
+	std::cout << "Reconstructing scenes..." << std::endl;
 
+	int sceneCounter = 0;
 	while (pairSequence->hasNext()) {
+		sceneCounter++;
+		std::cout << "image pair " << sceneCounter << ": ";
 		Scene::ImagePair* currentScene = pairSequence->next();
 
 		std::vector<cv::Point2f> leftMatches = currentScene->getLeftMatches();
@@ -84,75 +88,73 @@ void SceneReconstructor::reconstructScenes(Iterator<Scene::ImagePair>* pairSeque
 
 
 		// compute the essential matrix
-		// TODO: play around with parameters: https://docs.opencv.org/4.1.1/d9/d0c/group__calib3d.html#ga13f7e34de8fa516a686a56af1196247f
 		std::vector<uchar> matchMask;
 
 		cv::Mat essentialMatrix = cv::findEssentialMat(leftMatches, rightMatches, this->calibration.getCameraMatrix(), cv::RANSAC, 0.999, 3, matchMask);
 
 		// compute R and t from the essential matrix
-		// using https://docs.opencv.org/4.1.1/d9/d0c/group__calib3d.html#ga13f7e34de8fa516a686a56af1196247f
 		std::vector<uchar> poseMask;
 		cv::Mat localRotation, localTranslation;
 		int numberOfInliers = cv::recoverPose(essentialMatrix, leftMatches, rightMatches, calibration.getCameraMatrix(), localRotation, localTranslation, matchMask);
 
-		// combineMask(poseMask, matchMask);
-
 		cv::Mat projection;
 		cv::Mat globalTransform;
-
 		computPoseAndProjection(localRotation, localTranslation, currentScene->getPreviousTransform(), globalTransform, projection);
 
-		// TODO: check output and maybe convert the input types to float 
-		// triangulate and get the world points
 		cv::Mat worldPoints;
 		cv::Mat previousProjection;
 		cv::Mat currentProjection;
 
+		// according to the opencv documentation all arguments for triangualtePoints must be of type float
+		// therefore convert them here 
 		currentScene->getPreviousProjection().convertTo(previousProjection, CV_32FC1);
 		projection.convertTo(currentProjection, CV_32FC1);
 		
+		// triangulate and get the world points
 		cv::triangulatePoints(previousProjection, currentProjection, leftMatches, rightMatches, worldPoints);
 
-		// normalize points
-		std::vector<size_t> usedKeypointIndexesForReconstruction;
-		for (int i = 0; i < worldPoints.cols; i++) {
-
-			// only continue with world points, which are inliers and have a positive z value
-			if (matchMask.at(i) && ((worldPoints.at<float>(2, i) > 0 && worldPoints.at<float>(3, i) > 0) || 
-				                     worldPoints.at<float>(2, i) < 0 && worldPoints.at<float>(3, i) < 0)) {
-				float divisor = worldPoints.at<float>(3, i);
-
-				worldPoints.at<float>(0, i) /= divisor;
-				worldPoints.at<float>(1, i) /= divisor;
-				worldPoints.at<float>(2, i) /= divisor;
-				worldPoints.at<float>(3, i) /= divisor;
-
-				// std::cout << worldPoints.col(i) << std::endl;
-
-				usedKeypointIndexesForReconstruction.push_back(i);
-			} else {
-				// ensure that the keypoint is set to 0 for outliers
-				matchMask.at(i) = 0;
-			}
-		}
-		std::cout << "triangulated " << usedKeypointIndexesForReconstruction.size() << " Points" << std::endl;
-
-		if (currentScene->isFirstImagePair())
+		// scale if necessary and set reconstruction result for the image pair.
+		if (currentScene->isFirstImagePair()) {
+			std::cout << "No scaling necessary." << std::endl;
 			currentScene->setReconstruction(projection, globalTransform, worldPoints, matchMask);
-		else {
+		} else {
+			// normalize points
+			// std::vector<size_t> usedKeypointIndexesForReconstruction;
+			std::vector<size_t> usedKeypointIndexesForReconstruction;
+			for (int i = 0; i < worldPoints.cols; i++) {
+				// only continue with world points, which are inliers and have a positive z value
+				// mark points with negative z value as outliers in the mask 
+				if (matchMask.at(i)) {
+					if ((worldPoints.at<float>(2, i) > 0 && worldPoints.at<float>(3, i) > 0) ||
+						 worldPoints.at<float>(2, i) < 0 && worldPoints.at<float>(3, i) < 0) {
+
+						float divisor = worldPoints.at<float>(3, i);
+
+						worldPoints.at<float>(0, i) /= divisor;
+						worldPoints.at<float>(1, i) /= divisor;
+						worldPoints.at<float>(2, i) /= divisor;
+						worldPoints.at<float>(3, i) /= divisor;
+
+						// store index of a good match in order to get reconstructed world points from the previous image pair
+						usedKeypointIndexesForReconstruction.push_back(i);
+					} else {
+						matchMask.at(i) = 0;
+					}
+				}
+			}
+
 			std::map<size_t, cv::Point3f> matchingWorldPoints = currentScene->getMatchingWorldPoints(usedKeypointIndexesForReconstruction);
 			std::vector<std::tuple<double, double>> distances;
-
 
 			std::cout << "Found " << matchingWorldPoints.size() << " overlapping worldpoints." << std::endl;
 
 			if (matchingWorldPoints.size() < 2) {
-				std::cerr << "Not enought points were found for scaling. Stopping reconstruction." << std::endl;
+				std::cerr << std::endl << "Not enought referenze points were found to scale the current iamge pair. Stopping reconstruction early." << std::endl;
 				break;
 			}
 
 			auto matchWorldPointPair = matchingWorldPoints.begin();
-			while(matchWorldPointPair != matchingWorldPoints.end()) {
+			while (matchWorldPointPair != matchingWorldPoints.end()) {
 
 				cv::Point3f unscaledA = toPoint(worldPoints.col(matchWorldPointPair->first));
 				cv::Point3f scaledA = matchWorldPointPair->second;
@@ -197,4 +199,5 @@ void SceneReconstructor::reconstructScenes(Iterator<Scene::ImagePair>* pairSeque
 			currentScene->setReconstruction(projection, globalTransform, worldPoints, matchMask);
 		}
 	}
+	std::cout << "Done." << std::endl << std::endl;
 }
