@@ -12,7 +12,7 @@
 class ModelExporter {
     public:
         virtual void exportPointCloud(const std::filesystem::path& filepath,
-                                      const cv::Mat& worldPoints,
+                                      const std::vector<cv::Point3f>& worldPoints,
                                       const std::vector<Colors::Color>& colors) = 0;
         virtual void exportPointCloudSequence(const std::filesystem::path& filepath, Iterator<Scene::ImagePair>* imageSequence) = 0;
 

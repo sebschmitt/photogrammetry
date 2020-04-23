@@ -36,7 +36,8 @@ namespace Scene {
 
         cv::Mat1d projection;
         cv::Mat1d tranform;
-        cv::Mat1f worldPoints = cv::Mat1f(0, 0);
+        // cv::Mat1f worldPoints = cv::Mat1f(0, 0);
+        std::vector<cv::Point3f> worldPoints;
         std::map<size_t, size_t> matchIdxToWorldPoint;
 
 
@@ -59,7 +60,7 @@ namespace Scene {
         cv::Mat& getRightImage();
         cv::Mat getProjection();
         cv::Mat getTransform();
-        cv::Mat& getWorldPoints();
+        std::vector<cv::Point3f>& getWorldPoints();
         std::vector<Colors::Color> getColors();
 
         const cv::Mat getPreviousTransform();
