@@ -131,7 +131,7 @@ void SceneReconstructor::reconstructScenes(Iterator<Scene::ImagePair>* pairSeque
 			std::map<size_t, cv::Point3f> matchingWorldPoints = currentScene->getMatchingWorldPoints(usedKeypointIndexesForReconstruction);
 			std::vector<std::tuple<double, double>> distances;
 
-			std::cout << "Found " << matchingWorldPoints.size() << " overlapping worldpoints." << std::endl;
+			std::cout << "Found " << matchingWorldPoints.size() << " overlapping worldpoints. ";
 
 			if (matchingWorldPoints.size() < 2) {
 				std::cerr << std::endl << "Not enought referenze points were found to scale the current iamge pair. Stopping reconstruction early." << std::endl;
@@ -139,35 +139,66 @@ void SceneReconstructor::reconstructScenes(Iterator<Scene::ImagePair>* pairSeque
 			}
 
 			// create pairs of points and mesure the distances
-			auto matchWorldPointPair = matchingWorldPoints.begin();
-			while (matchWorldPointPair != matchingWorldPoints.end()) {
 
-				cv::Point3f unscaledA = toPoint(worldPoints.col(matchWorldPointPair->first));
-				cv::Point3f scaledA = matchWorldPointPair->second;
+			double sumofScales = 0;
+			int distancesCount = 0;
+			for (auto x = matchingWorldPoints.begin(); x != matchingWorldPoints.end()--; x++) {
+				cv::Point3f unscaledA = toPoint(worldPoints.col(x->first));
+				cv::Point3f scaledA = x->second;
 
-				matchWorldPointPair++;
-				if (matchWorldPointPair == matchingWorldPoints.end())
-					break;
+				for (auto y = std::next(x); y != matchingWorldPoints.end(); y++) {
+					cv::Point3f unscaledB = toPoint(worldPoints.col(y->first));
+					cv::Point3f scaledB = y->second;
 
-				cv::Point3f unscaledB = toPoint(worldPoints.col(matchWorldPointPair->first));
-				cv::Point3f scaledB = matchWorldPointPair->second;
+					double scaledDistance = getDistance(scaledA, scaledB);
+					double unscaledDistance = getDistance(unscaledA, unscaledB);
+					
+					// avoid division through 0
+					if (unscaledDistance == 0)
+						continue;
 
-				distances.push_back(std::make_tuple(getDistance(unscaledA, unscaledB), getDistance(scaledA, scaledB)));
-			}
+					double currentScale = scaledDistance / unscaledDistance;
+					// avoid double overflow 
+					if (currentScale > std::numeric_limits<double>::max() - sumofScales)
+						break;
 
-			// compute the scale
-			double scale = 0;
-			std::vector<double> scales;
-			for (int i = 0; i < distances.size()-1; i++) {
-				if (std::get<1>(distances.at(i)) <= 0 || std::get<0>(distances.at(i)) <= 0) {
-					continue;
+					sumofScales += currentScale;
+					distancesCount++;
 				}
-				scales.push_back(std::get<1>(distances.at(i)) / std::get<0>(distances.at(i)));
-
-				scale += std::get<1>(distances.at(i)) / std::get<0>(distances.at(i));
 			}
+			double scale = sumofScales / distancesCount;
 
-			scale /= distances.size();
+			std::cout << "Using scale " << scale << std::endl;
+
+			//auto matchWorldPointPair = matchingWorldPoints.begin();
+			//while (matchWorldPointPair != matchingWorldPoints.end()) {
+
+			//	cv::Point3f unscaledA = toPoint(worldPoints.col(matchWorldPointPair->first));
+			//	cv::Point3f scaledA = matchWorldPointPair->second;
+
+			//	matchWorldPointPair++;
+			//	if (matchWorldPointPair == matchingWorldPoints.end())
+			//		break;
+
+			//	cv::Point3f unscaledB = toPoint(worldPoints.col(matchWorldPointPair->first));
+			//	cv::Point3f scaledB = matchWorldPointPair->second;
+
+			//	distances.push_back(std::make_tuple(getDistance(unscaledA, unscaledB), getDistance(scaledA, scaledB)));
+			//}
+
+			//// compute the scale
+			//double scale = 0;
+			//std::vector<double> scales;
+			//for (int i = 0; i < distances.size()-1; i++) {
+			//	if (std::get<1>(distances.at(i)) <= 0 || std::get<0>(distances.at(i)) <= 0) {
+			//		continue;
+			//	}
+			//	scales.push_back(std::get<1>(distances.at(i)) / std::get<0>(distances.at(i)));
+
+			//	scale += std::get<1>(distances.at(i)) / std::get<0>(distances.at(i));
+			//}
+
+			//scale /= distances.size();
 
 			worldPoints.release();
 
