@@ -142,13 +142,13 @@ void SceneReconstructor::reconstructScenes(Iterator<Scene::ImagePair>* pairSeque
 
 			double sumofScales = 0;
 			int distancesCount = 0;
-			for (auto x = matchingWorldPoints.begin(); x != matchingWorldPoints.end()--; x++) {
-				cv::Point3f unscaledA = toPoint(worldPoints.col(x->first));
-				cv::Point3f scaledA = x->second;
+			for (auto outerMatchPointPair = matchingWorldPoints.begin(); outerMatchPointPair != matchingWorldPoints.end()--; outerMatchPointPair++) {
+				cv::Point3f unscaledA = toPoint(worldPoints.col(outerMatchPointPair->first));
+				cv::Point3f scaledA = outerMatchPointPair->second;
 
-				for (auto y = std::next(x); y != matchingWorldPoints.end(); y++) {
-					cv::Point3f unscaledB = toPoint(worldPoints.col(y->first));
-					cv::Point3f scaledB = y->second;
+				for (auto innerMatchPointPair = std::next(outerMatchPointPair); innerMatchPointPair != matchingWorldPoints.end(); innerMatchPointPair++) {
+					cv::Point3f unscaledB = toPoint(worldPoints.col(innerMatchPointPair->first));
+					cv::Point3f scaledB = innerMatchPointPair->second;
 
 					double scaledDistance = getDistance(scaledA, scaledB);
 					double unscaledDistance = getDistance(unscaledA, unscaledB);
@@ -169,36 +169,6 @@ void SceneReconstructor::reconstructScenes(Iterator<Scene::ImagePair>* pairSeque
 			double scale = sumofScales / distancesCount;
 
 			std::cout << "Using scale " << scale << std::endl;
-
-			//auto matchWorldPointPair = matchingWorldPoints.begin();
-			//while (matchWorldPointPair != matchingWorldPoints.end()) {
-
-			//	cv::Point3f unscaledA = toPoint(worldPoints.col(matchWorldPointPair->first));
-			//	cv::Point3f scaledA = matchWorldPointPair->second;
-
-			//	matchWorldPointPair++;
-			//	if (matchWorldPointPair == matchingWorldPoints.end())
-			//		break;
-
-			//	cv::Point3f unscaledB = toPoint(worldPoints.col(matchWorldPointPair->first));
-			//	cv::Point3f scaledB = matchWorldPointPair->second;
-
-			//	distances.push_back(std::make_tuple(getDistance(unscaledA, unscaledB), getDistance(scaledA, scaledB)));
-			//}
-
-			//// compute the scale
-			//double scale = 0;
-			//std::vector<double> scales;
-			//for (int i = 0; i < distances.size()-1; i++) {
-			//	if (std::get<1>(distances.at(i)) <= 0 || std::get<0>(distances.at(i)) <= 0) {
-			//		continue;
-			//	}
-			//	scales.push_back(std::get<1>(distances.at(i)) / std::get<0>(distances.at(i)));
-
-			//	scale += std::get<1>(distances.at(i)) / std::get<0>(distances.at(i));
-			//}
-
-			//scale /= distances.size();
 
 			worldPoints.release();
 
