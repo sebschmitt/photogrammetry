@@ -12,8 +12,10 @@ SceneReconstructor::SceneReconstructor(Calibration calibration) {
 
 cv::Mat SceneReconstructor::getProjection(const cv::Mat &globalRotation, const cv::Mat &globalTranslation) {
 	cv::Mat projection = cv::Mat(3, 4, CV_64FC1);
+
 	// copy rotation and translation into the matrix, multiply with K
 	cv::hconcat(globalRotation,  globalTranslation, projection);
+
 	return calibration.getCameraMatrix() * projection;
 }
 
@@ -76,7 +78,7 @@ void SceneReconstructor::reconstructScenes(Iterator<Scene::ImagePair>* pairSeque
 		// compute the essential matrix
 		std::vector<uchar> matchMask;
 
-		cv::Mat essentialMatrix = cv::findEssentialMat(leftMatches, rightMatches, this->calibration.getCameraMatrix(), cv::RANSAC, 0.999, 3, matchMask);
+		cv::Mat essentialMatrix = cv::findEssentialMat(leftMatches, rightMatches, this->calibration.getCameraMatrix(), cv::RANSAC, 0.999, 1, matchMask);
 
 		// compute R and t from the essential matrix
 		std::vector<uchar> poseMask;
