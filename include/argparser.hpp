@@ -21,9 +21,8 @@ namespace argparser {
         Argument* setRequired(bool);
         bool isFound();
 
-        // I have no fucking clue why this works.
         template<typename T> T getValue() {
-            std::istringstream in(_get<std::string>());
+            std::istringstream in(this->value);
             T t = T();
             in >> t >> std::ws;
             return t;
@@ -32,18 +31,6 @@ namespace argparser {
         Argument(std::string name, std::string description);
 
     protected:
-        template<typename T> T _get() {
-            T t = T();
-            typename T::value_type vt;
-            for (auto &s : this->value) {
-                std::istringstream in(&s);
-                in >> vt;
-                t.push_back(vt);
-            }
-
-            return t;
-        }
-
         std::string value;
         bool _found{false};
         bool _required{false};

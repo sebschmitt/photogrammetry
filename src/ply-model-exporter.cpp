@@ -13,46 +13,39 @@ using namespace cv;
 
 void PlyModelExporter::exportPointCloudSequence(const filesystem::path& filepath,  Iterator<Scene::ImagePair>* imageSequence) {
 
-    cv::Mat worldPoints = cv::Mat(3, 0, CV_32FC1);
+    std::vector<cv::Point3f> worldPoints;
     std::vector<Colors::Color> colors;
 
     while (imageSequence->hasNext()) {
         Scene::ImagePair *currentScene = imageSequence->next();
 
-        cv::Mat points = currentScene->getWorldPoints();
+        std::vector<cv::Point3f> points = currentScene->getWorldPoints();
         
-        if (points.cols == 0)
+        if (points.size() == 0)
             break;
 
         auto currentColors = currentScene->getColors();
 
-        if (currentColors.size() != points.cols)
+        if (currentColors.size() != points.size())
             std::cout << "Number of colors and reconstructed points are not equal." << std::endl;
 
         colors.insert(colors.end(), currentColors.begin(), currentColors.end());
+        worldPoints.insert(worldPoints.end(), points.begin(), points.end());
 
-        cv::hconcat(worldPoints, points, worldPoints);
     }
 
     exportPointCloud(filepath, worldPoints, colors);
 }
 
 void PlyModelExporter::exportPointCloud(const filesystem::path& filepath,
-                                        const Mat& worldPoints,
+                                        const std::vector<cv::Point3f>& worldPoints,
                                         const std::vector<Colors::Color> &colors) {
-    assert(worldPoints.rows == 3);
 
     if (filepath.has_parent_path() && !filesystem::exists(filepath.parent_path()))
         throw runtime_error("The directory path for the file " + filepath.string() + " does not exist.");
 
     if (filepath.extension() != ".ply")
         throw runtime_error("Invalid file extension " + filepath.extension().string() + ". Exptected .ply");
-
-    if (worldPoints.channels() != 1) 
-        throw runtime_error("Only 1 channel matrices are supported.");
-
-    if (worldPoints.type() != CV_32FC1)
-        throw runtime_error("Only matrices with floating point values are supported.");
 
     ofstream outputfile(filepath);
 
@@ -65,10 +58,10 @@ void PlyModelExporter::exportPointCloud(const filesystem::path& filepath,
     }
 }
 
-void PlyModelExporter::writeHeader(ofstream& outputfile, const Mat& vertices) {
+void PlyModelExporter::writeHeader(ofstream& outputfile, const std::vector<cv::Point3f>& vertices) {
     outputfile << "ply" << endl;
     outputfile << "format ascii 1.0" << endl;
-    outputfile << "element vertex " << vertices.cols << endl;
+    outputfile << "element vertex " << vertices.size() << endl;
     outputfile << "property float x" << endl;
     outputfile << "property float y" << endl;
     outputfile << "property float z" << endl;
@@ -86,11 +79,11 @@ void PlyModelExporter::writeHeader(ofstream& outputfile, const Mat& vertices) {
     outputfile << "end_header" << endl;
 }
 
-void PlyModelExporter::writeVertexList(ofstream& outputfile, const Mat& vertices, const vector<Colors::Color> &colors) {
-    for (size_t col = 0; col < vertices.cols; col++) {
-        outputfile << vertices.at<float>(0, col) << " ";
-        outputfile << vertices.at<float>(1, col) << " ";
-        outputfile << vertices.at<float>(2, col) << " ";
+void PlyModelExporter::writeVertexList(ofstream& outputfile, const std::vector<cv::Point3f>& vertices, const vector<Colors::Color> &colors) {
+    for (size_t col = 0; col < vertices.size(); col++) {
+        outputfile << vertices.at(col).x << " ";
+        outputfile << vertices.at(col).y << " ";
+        outputfile << vertices.at(col).z << " ";
         outputfile << (int) colors.at(col).Red << " ";
         outputfile << (int) colors.at(col).Green << " ";
         outputfile << (int) colors.at(col).Blue << endl;

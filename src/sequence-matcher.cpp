@@ -169,15 +169,22 @@ Scene::SceneSequence SequenceMatcher::generateSequence(std::filesystem::path fol
 
             if (outputMatches) {
                 cv::Mat canvas;
-                cv::drawMatches(leftImage.image, leftImage.keypoints, rightImage.image, rightImage.keypoints,
-                                maskedMatches, canvas);
+
+                cv::drawMatches(leftImage.image, leftImage.keypoints, rightImage.image, rightImage.keypoints, maskedMatches, canvas);
 
                 std::stringstream imgNameStream;
-                imgNameStream << matchOutputDirectory.string() << "/image " << leftImageIndex << " on " << rightImageIndex << " "
-                              << matches.size() << " " << maskedMatches.size() << ".jpg";
+                imgNameStream << matchOutputDirectory.string() << "/image " << leftImageIndex << " on " << rightImageIndex << " " << matches.size() << " " << maskedMatches.size() << ".jpg";
                 std::string imgName = imgNameStream.str();
 
                 cv::imwrite(imgName, canvas);
+
+
+                cv::Mat canvas2;
+                std::stringstream imgNameStream2;
+                imgNameStream2 << matchOutputDirectory.string() << "/image " << leftImageIndex << " on " << rightImageIndex << ".jpg";
+                std::string imageName2 = imgNameStream2.str();
+                cv::hconcat(leftImage.image, rightImage.image, canvas2);
+                cv::imwrite(imageName2, canvas2);
             }
         // }
     }

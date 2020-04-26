@@ -78,7 +78,7 @@ namespace Scene {
 		return this->projection;
 	}
 
-	cv::Mat &ImagePair::getWorldPoints() {
+	std::vector<cv::Point3f> &ImagePair::getWorldPoints() {
 		return this->worldPoints;
 	}
 
@@ -146,42 +146,23 @@ namespace Scene {
 		this->projection = projection;//std::move(projection);
 		this->tranform = transform;//std::move(tranform);
 
-		// count masked matches and check if z-Index is greater than 0
-		int maxWorldPointCount = 0;// std::accumulate(reconstructionMask.begin(), reconstructionMask.end(), 0);
-		for (size_t matchIndex = 0; matchIndex < reconstructionMask.size(); matchIndex++) {
-			if (reconstructionMask.at(matchIndex)) {
-				if ((worldPoints.at<float>(2, matchIndex) > 0 && worldPoints.at<float>(3, matchIndex) < 0) ||
-					(worldPoints.at<float>(2, matchIndex) < 0 && worldPoints.at<float>(3, matchIndex) > 0)) {
-					reconstructionMask.at(matchIndex) = 0;
-				}
-				else {
-					maxWorldPointCount++;
-				}
-			}
-		}
-
-		this->worldPoints = cv::Mat1f(3, maxWorldPointCount);
-
 		// normalize, filter and copy found world points 
 		// also create the worldPoint to match mapping
 		size_t worldPointIndex = 0;
 		for (size_t matchIndex = 0; matchIndex < reconstructionMask.size(); matchIndex++) {
 			if (reconstructionMask.at(matchIndex)) {
-				//if ((worldPoints.at<float>(2, matchIndex) > 0 && worldPoints.at<float>(3, matchIndex) < 0) ||
-				//	(worldPoints.at<float>(2, matchIndex) < 0 && worldPoints.at<float>(3, matchIndex) > 0)) {
-				//	reconstructionMask.at(matchIndex) = 0;
-				//	continue;
-				//}
-				float divisor = worldPoints.at<float>(3, matchIndex);
+				if ((worldPoints.at<float>(2, matchIndex) > 0 && worldPoints.at<float>(3, matchIndex) > 0) ||
+					(worldPoints.at<float>(2, matchIndex) < 0 && worldPoints.at<float>(3, matchIndex) < 0)) {
 
-				this->worldPoints.at<float>(0, worldPointIndex) = worldPoints.at<float>(0, matchIndex) / divisor;
-				this->worldPoints.at<float>(1, worldPointIndex) = worldPoints.at<float>(1, matchIndex) / divisor;
-				this->worldPoints.at<float>(2, worldPointIndex) = worldPoints.at<float>(2, matchIndex) / divisor;
+					float divisor = worldPoints.at<float>(3, matchIndex);
+					this->worldPoints.push_back(cv::Point3f(worldPoints.at<float>(0, matchIndex) / divisor, worldPoints.at<float>(1, matchIndex) / divisor, worldPoints.at<float>(2, matchIndex) / divisor));
 
-				matchIdxToWorldPoint[matchIndex] = worldPointIndex;
-				worldPointIndex++;
+					matchIdxToWorldPoint[matchIndex] = worldPointIndex;
+					worldPointIndex++;
+				}
 			}
 		}
+		std::cout << "Reconstructed " << worldPointIndex << " points." << std::endl;
 	}
 
 
@@ -213,7 +194,7 @@ namespace Scene {
 	}
 
 
-	std::map<size_t, cv::Point3f> ImagePair::getWorldPointsFromRightKeypoints(const std::map<size_t, size_t> &keypointIndexToNextMatchIndex) {
+	std::map<size_t, cv::Point3f> ImagePair::getWorldPointsFromRightKeypoints(const std::map<size_t, size_t>& keypointIndexToNextMatchIndex) {
 		std::map<size_t, cv::Point3f> nextMatchIndexToWorldPoint;
 
 		for (auto keypointMatchPair : keypointIndexToNextMatchIndex) {
@@ -225,10 +206,7 @@ namespace Scene {
 				// ensure the match has a world point
 				if (matchIdxToWorldPoint.count(matchIndex) > 0) {
 					size_t worldPointIndex = this->matchIdxToWorldPoint[matchIndex];
-					cv::Point3f point = cv::Point3f(worldPoints.at<float>(0, worldPointIndex), worldPoints.at<float>(1, worldPointIndex), worldPoints.at<float>(2, worldPointIndex));
-
-					// store the the pair nextMatchIndex - worldpoint
-					nextMatchIndexToWorldPoint[keypointMatchPair.second] = point;
+					nextMatchIndexToWorldPoint[keypointMatchPair.second] = worldPoints.at(worldPointIndex);
 				}
 			}
 		}
@@ -243,5 +221,5 @@ namespace Scene {
 		return rightImage.name;
 	}
 
-}
+	}
 

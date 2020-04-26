@@ -48,7 +48,7 @@ set_target_properties(yapgt PROPERTIES
         CXX_EXTENSIONS OFF
 )
 
-# copy every linked opencv library to the binary directory
+# copy each linked opencv library to the binary directory
 foreach(CVLib ${OpenCV_LIBS})
     file(COPY ${_OpenCV_LIB_PATH}/${CVLib}${OpenCV_VERSION_MAJOR}${OpenCV_VERSION_MINOR}${OpenCV_VERSION_PATCH}d.dll DESTINATION ${CMAKE_BINARY_DIR})
 endforeach()
