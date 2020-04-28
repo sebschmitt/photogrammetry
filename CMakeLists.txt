@@ -13,13 +13,10 @@ find_package(OpenCV REQUIRED)
 include_directories(include)
 
 # create the variable SOURCES, which is a list of all source and header files
-set(SOURCES 
-        src/CameraCalibration.cpp
+set(SOURCES
         src/calibration.cpp
         src/main.cpp
-        src/feature-matching.cpp
         src/ply-model-exporter.cpp
-        src/essential-matrix.cpp
         src/argparser.cpp
         src/reconstruction.cpp
         src/image-pair.cpp 

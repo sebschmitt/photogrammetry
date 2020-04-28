@@ -26,7 +26,6 @@ public:
 	Calibration();
 
     const cv::Mat& getCameraMatrix() const {return cameraMatrix;}
-    const cv::Mat& getInstrincs() const {return cameraMatrix;}
 
 	void calibrate(std::vector<std::filesystem::path> imageFiles, cv::Size boardSize);
 
