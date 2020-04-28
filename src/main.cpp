@@ -1,6 +1,4 @@
-#include "feature-matching.hpp"
 #include "calibration.hpp"
-#include "essentialMatrix.hpp" 
 
 #include <string>
 #include <filesystem>
@@ -8,72 +6,154 @@
 
 #include <iostream>
 
+#include "argparser.hpp"
+#include <sequence-matcher.hpp>
+#include <reconstruction.hpp>
 
 using namespace std;
 
 int main(int argc, char *argv[]) {
-    Calibration calb = Calibration();
+    argparser::ArgumentParser parser("yapgt (yet another photogrammetry tool)");
+
+    /* Calibration Arguments */
+    argparser::Argument a_loadCalibration("loadCalibration", "Filepath to load calibration from");
+    argparser::Argument a_saveCalibration("saveCalibration", "Filepath to save calibration to");
+    argparser::Argument a_calibrationImages("calibrationImages", "Folder with images for calibration");
+    argparser::Argument a_calibrationCalibrateRow("calibrateRow", "corners row for Calibration");
+    argparser::Argument a_calibrationCalibrateColumn("calibrateColumn", "corners column for Calibration");
+
+    argparser::Argument a_matchImages("matchImages", "Folder with images to match");
+    argparser::Argument a_outFile("out", "Output file");
+    argparser::Argument a_matchOutputDir("matchOutput", "Folder to store match images in");
 
 
-    filesystem::path calibrationFile("./resources/calibration.xml");
-    filesystem::path path("./resources/chessboard_images");
+    parser.addArgument(&a_loadCalibration);
+    parser.addArgument(&a_saveCalibration);
+    parser.addArgument(&a_calibrationImages);
+    parser.addArgument(&a_calibrationCalibrateRow);
+    parser.addArgument(&a_calibrationCalibrateColumn);
+    parser.addArgument(&a_matchImages);
+    parser.addArgument(&a_outFile);
+    parser.addArgument(&a_matchOutputDir);
 
-    if (!filesystem::exists(calibrationFile)) {
+    parser.parseArguments(argc, argv);
+
+    Calibration calibration = Calibration();
+
+    if (!(a_loadCalibration.isFound() || a_calibrationImages.isFound())) {
+        cout << "Neither " << a_loadCalibration.getName() << " nor " << a_calibrationImages.getName() << " was supplied" << endl;
+        return -1;
+    }
+
+    if (a_loadCalibration.isFound() && a_calibrationImages.isFound()) {
+        cout << "You can't use  " << a_loadCalibration.getName() << " and " << a_calibrationImages.getName() << " at the same time" << endl;
+        return -1;
+    }
+
+    if (a_loadCalibration.isFound()) {
+        filesystem::path path(a_loadCalibration.getValue<string>());
+
+        if (!filesystem::exists(path) || !filesystem::is_regular_file(path)) {
+            cout << "Value supplied for " << a_loadCalibration.getName() << " is not a valid path" << endl;
+            return -1;
+        }
+
+        calibration.loadCalibration(path);
+    }
+
+    if (a_calibrationImages.isFound()) {
+        filesystem::path path(a_calibrationImages.getValue<string>());
+
+        if (!filesystem::exists(path) || !filesystem::is_directory(path)) {
+            cout << "Value supplied for " << a_calibrationImages.getName() << " is not a valid path" << endl;
+            return -1;
+        }
+
         vector<filesystem::path> filepaths;
         for (const auto& entry : filesystem::directory_iterator(path)) {
             filepaths.push_back(entry.path());
         }
 
         // number of inner corners per chessboard row and column
-        unsigned int cornersRow = 6;
-        unsigned int cornersColumn = 9;
+        if (!a_calibrationCalibrateRow.isFound()) {
+            cout << "Argument " << a_calibrationCalibrateRow.getName() << " is required for calibration" << endl;
+            return -1;
+        }
 
-        calb.calibrate(filepaths, cv::Size(cornersColumn, cornersRow));
-        calb.saveCalibration(calibrationFile);
-    } else {
-        calb.loadCalibration(calibrationFile);
+        if (!a_calibrationCalibrateColumn.isFound()) {
+            cout << "Argument " << a_calibrationCalibrateColumn.getName() << " is required for calibration" << endl;
+            return -1;
+        }
+
+        unsigned int cornersRow = a_calibrationCalibrateRow.getValue<int>();
+        unsigned int cornersColumn = a_calibrationCalibrateColumn.getValue<int>();
+
+        calibration.calibrate(filepaths, cv::Size(cornersColumn, cornersRow));
     }
 
-    /* calb.loadCalibration("./resources/calibration.xml"); */
+    if (a_saveCalibration.isFound()) {
+        filesystem::path saveCalibrationFilePath(a_saveCalibration.getValue<string>());
+        filesystem::path outFileFolder = saveCalibrationFilePath.parent_path();
+        if (!filesystem::exists(outFileFolder) || !filesystem::is_directory(outFileFolder)) {
+            if (!filesystem::create_directories(outFileFolder)) {
+                cout << "Could not create directory for " << a_saveCalibration.getName() << endl;
+                return -1;
+            }
+        }
 
-    cout << "calibration successful" << endl;
+        calibration.saveCalibration(saveCalibrationFilePath);
+    }
 
+    if (a_matchImages.isFound()) {
+        filesystem::path matchImagesPath(a_matchImages.getValue<string>());
+        if (!filesystem::exists(matchImagesPath) || !filesystem::is_directory(matchImagesPath)) {
+            cout << "Value supplied for " << a_matchImages.getName() << " is not a valid path" << endl;
+            return -1;
+        }
 
-    cv::Mat img1 = cv::imread("./resources/guitar_images/20200223_125417880_iOS.jpg");
-    /* cv::Mat img1 = cv::imread("./resources/guitar_images/20200223_125427418_iOS.jpg", cv::IMREAD_GRAYSCALE); */
-    cv::Mat img2 = cv::imread("./resources/guitar_images/20200223_125447874_iOS.jpg");
-
-    /* cv::namedWindow("Matches", cv::WINDOW_FREERATIO); */
-    /* cv::imshow("Matches", img1); */
-    /* cv::waitKey(0); */
-    /* cv::imshow("Matches", img2); */
-    /* cv::waitKey(0); */
-
-    vector<cv::Point2f> imagePoints1;
-    vector<cv::Point2f> imagePoints2;
-    FeatureMatching featureMatching = FeatureMatching(calb);
-    featureMatching.findMatches(img1, img2, imagePoints1, imagePoints2);
-
-    cout << "matching successful" << endl;
-    EssentialMatrix essentialMatrixComputer(calb);
-
-    cv::Mat cameraRotation, cameraTranslation;
-    essentialMatrixComputer.determineEssentialMatrix(imagePoints1,
-                                                     imagePoints2,
-                                                     cameraRotation,
-                                                     cameraTranslation);
+        std::vector<filesystem::path> inputImagePaths;
+        for (const auto &entry : filesystem::directory_iterator(matchImagesPath)) {
+            inputImagePaths.push_back(entry.path());
+        }
 
 
+        auto parameterPath = a_matchOutputDir.getValue<string>();
+        if (parameterPath.back() == '/' || parameterPath.back() == '\\')
+            parameterPath.pop_back();
+
+        filesystem::path matchOutputPath(parameterPath);
+        if (a_matchOutputDir.isFound() && !filesystem::exists(matchOutputPath)) {
+            if (!filesystem::create_directories(matchOutputPath)) {
+                cout << "Could not create directory for " << a_matchOutputDir.getName() << endl;
+                return -1;
+            }
+        }
+
+        Scene::SequenceMatcher sequenceMatcher(calibration);
+        Scene::SceneSequence sequence = sequenceMatcher.generateSequence(matchImagesPath, matchOutputPath);
+
+        Scene::SceneReconstructor reconstructor(calibration);
+        reconstructor.reconstructScenes(sequence.createIterator());
 
 
-    cv::Mat test = (cv::Mat_<float>(3,5) << 5, 5, 5,
-                                             10, 20, 10,
-                                             15, 13, 15,
-                                             30, 20, 20,
-                                             20, 10, 25);
+        if (a_outFile.isFound()) {
+            parameterPath = a_outFile.getValue<string>();
+            if (parameterPath.back() == '/' || parameterPath.back() == '\\')
+                parameterPath.pop_back();
 
-   PlyModelExporter exporter;
+            filesystem::path outputFilePath(parameterPath);
+            filesystem::path outputFileFolder = outputFilePath.parent_path();
+            if (!filesystem::exists(outputFileFolder) || !filesystem::is_directory(outputFileFolder)) {
+                if (!filesystem::create_directories(outputFileFolder)) {
+                    cout << "Could not create directory for " << a_outFile.getName() << endl;
+                    return -1;
+                }
+            }
 
-   exporter.exportPointCloud("./resources/test.ply", test);
+            PlyModelExporter exporter;
+            exporter.exportPointCloudSequence(outputFilePath, sequence.createIterator());
+        }
+    }
 
+    return 0;
 }

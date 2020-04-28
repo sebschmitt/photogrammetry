@@ -9,25 +9,23 @@
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/calib3d.hpp>
 
+const int IMAGE_DOWNSAMPLE = 2;
+
 class Calibration {
 
 private:	
-    cv::Mat cameraMatrix = cv::Mat(3, 3, CV_32FC1);
-    cv::Mat optimalCameraMatrix;
-    cv::Mat distortionCoefficients;
+    cv::Mat1d cameraMatrix = cv::Mat1d(3, 3);
+    cv::Mat1d distortionCoefficients;
     std::vector<cv::Mat> rotationVectors;
     std::vector<cv::Mat> translationVectors;
 
     std::string cameraMatrixSerName = "cameraMatrix";
-    std::string optimalMatrixSerName = "optimalMatrix";
     std::string distortionCoefficientsSerName = "distortionCoefficients";
 
 public:
-	Calibration(std::filesystem::path filepath);
 	Calibration();
 
     const cv::Mat& getCameraMatrix() const {return cameraMatrix;}
-    const cv::Mat& getInstrincs() const {return cameraMatrix;}
 
 	void calibrate(std::vector<std::filesystem::path> imageFiles, cv::Size boardSize);
 
@@ -35,7 +33,7 @@ public:
 
 	void saveCalibration(std::filesystem::path filepath);
 
-    void undistortImage(cv::InputArray image, cv::OutputArray undistortedImage);
+    void undistortImage(const cv::Mat& image, cv::Mat& undistortedImage);
 	
 };
 
