@@ -76,7 +76,7 @@ void SceneReconstructor::reconstructScenes(Iterator<Scene::ImagePair>* pairSeque
 		// compute the essential matrix
 		std::vector<uchar> matchMask;
 
-		cv::Mat essentialMatrix = cv::findEssentialMat(leftMatches, rightMatches, this->calibration.getCameraMatrix(), cv::RANSAC, 0.999, 3, matchMask);
+		cv::Mat essentialMatrix = cv::findEssentialMat(leftMatches, rightMatches, this->calibration.getCameraMatrix(), cv::RANSAC, 0.999, 1, matchMask);
 
 		// compute R and t from the essential matrix
 		std::vector<uchar> poseMask;
