@@ -134,15 +134,6 @@ namespace Scene {
                 std::string imgName = imgNameStream.str();
 
                 cv::imwrite(imgName, canvas);
-
-
-                cv::Mat canvas2;
-                std::stringstream imgNameStream2;
-                imgNameStream2 << matchOutputDirectory.string() << "/image " << leftImageIndex << " on "
-                               << rightImageIndex << ".jpg";
-                std::string imageName2 = imgNameStream2.str();
-                cv::hconcat(leftImage.image, rightImage.image, canvas2);
-                cv::imwrite(imageName2, canvas2);
             }
         }
 
