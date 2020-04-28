@@ -1,7 +1,3 @@
-//
-// Created by Sebastian Schmitt on 19.03.2020.
-//
-
 #include "argparser.hpp"
 
 #include <utility>

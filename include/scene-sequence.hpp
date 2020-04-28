@@ -1,7 +1,3 @@
-//
-// Created by Sebastian Schmitt on 08.04.2020.
-//
-
 #ifndef YAPGT_SCENE_SEQUENCE_H
 #define YAPGT_SCENE_SEQUENCE_H
 

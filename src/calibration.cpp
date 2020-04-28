@@ -24,7 +24,7 @@ void Calibration::saveCalibration(filesystem::path filepath) {
     filesystem::path directoryPath = filepath.parent_path();
     
     if (!directoryPath.empty() && !filesystem::exists(directoryPath))
-        throw runtime_error("The provieded directoryPath " + directoryPath.string() + " does not exist.");
+        throw runtime_error("The provided directoryPath " + directoryPath.string() + " does not exist.");
 
     cout << "Saving calibration to " << filepath.string().c_str() << endl;
     

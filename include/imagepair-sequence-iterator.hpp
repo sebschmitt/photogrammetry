@@ -1,7 +1,3 @@
-//
-// Created by Sebastian Schmitt on 08.04.2020.
-//
-
 #ifndef YAPGT_IMAGEPAIRSEQUENCEITERATOR_H
 #define YAPGT_IMAGEPAIRSEQUENCEITERATOR_H
 

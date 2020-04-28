@@ -14,7 +14,7 @@ const int IMAGE_DOWNSAMPLE = 2;
 class Calibration {
 
 private:	
-    cv::Mat1d cameraMatrix = cv::Mat1d(3, 3); //= cv::Mat1d(3, 3);
+    cv::Mat1d cameraMatrix = cv::Mat1d(3, 3);
     cv::Mat1d distortionCoefficients;
     std::vector<cv::Mat> rotationVectors;
     std::vector<cv::Mat> translationVectors;

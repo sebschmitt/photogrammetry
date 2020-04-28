@@ -1,7 +1,3 @@
-//
-// Created by Sebastian Schmitt on 08.04.2020.
-//
-
 #include "image-pair.hpp"
 #include "colors.hpp"
 
@@ -12,20 +8,20 @@
 
 namespace Scene {
 	/*
-		matchedKeypointsLeft: vector of indixes for the keypoints in the left image, that have been machted.
-		matchedKeypointsRight:vector of indixes for the keypoints in the right image, that have been machted.
+		matchedKeypointsLeft: vector of indexes for the keypoints in the left image, that have been matched.
+		matchedKeypointsRight:vector of indexes for the keypoints in the right image, that have been matched.
 
 		matchedKeypointsLeft[i] is matched to matchedKeypointsRight[i]
 
 	*/
 	ImagePair::ImagePair(Image leftImage, Image rightImage, std::vector<size_t> matchedKeypointsLeft, std::vector<size_t> matchedKeypointsRight) {
-		this->leftImage = leftImage; //std::move(leftImage);
-		this->rightImage = rightImage;// std::move(rightImage);
+		this->leftImage = leftImage;
+		this->rightImage = rightImage;
 		this->prevPair = nullptr;
 		this->nextPair = nullptr;
 
-		this->matchedKeypointsLeft = matchedKeypointsLeft;//std::move(matchedKeypointsLeft);
-		this->matchedKeypointsRight = matchedKeypointsRight;// std::move(matchedKeypointsRight);
+		this->matchedKeypointsLeft = matchedKeypointsLeft;
+		this->matchedKeypointsRight = matchedKeypointsRight;
 
 		// create mapping of keypoint to the respective match only for the right image
 		for (size_t index = 0; index < matchedKeypointsRight.size(); index++) {
@@ -37,13 +33,13 @@ namespace Scene {
 	}
 
 	ImagePair::ImagePair(Image leftImage, Image rightImage, std::vector<size_t> matchedKeypointsLeft, std::vector<size_t> matchedKeypointsRight, Calibration cameraCalibration) {
-		this->leftImage = leftImage; //std::move(leftImage);
-		this->rightImage = rightImage;// std::move(rightImage);
+		this->leftImage = leftImage;
+		this->rightImage = rightImage;
 		this->prevPair = nullptr;
 		this->nextPair = nullptr;
 
-		this->matchedKeypointsLeft = matchedKeypointsLeft;//std::move(matchedKeypointsLeft);
-		this->matchedKeypointsRight = matchedKeypointsRight;// std::move(matchedKeypointsRight);
+		this->matchedKeypointsLeft = matchedKeypointsLeft;
+		this->matchedKeypointsRight = matchedKeypointsRight;
 
 		// create mapping of keypoint to the respective match only for the right image
 		for (size_t index = 0; index < matchedKeypointsRight.size(); index++) {
@@ -104,7 +100,6 @@ namespace Scene {
 
 	const cv::Mat ImagePair::getPreviousTransform() {
 		if (prevPair == nullptr) {
-			// throw std::underflow_error("This pair does not have a previous tranformation");
 			return cv::Mat::eye(cv::Size(4, 4), CV_64FC1);
 		}
 
@@ -113,8 +108,6 @@ namespace Scene {
 
 	cv::Mat ImagePair::getPreviousProjection() {
 		if (prevPair == nullptr) {
-			// if (this->cameraCalibration == nullptr)
-			//	throw std::runtime_error("An image pair without a previous pair requires the camera calibration to be set explicitly.");
 			return cameraCalibration.getCameraMatrix() * cv::Mat::eye(3, 4, CV_64FC1);
 		}
 		return prevPair->getProjection();
@@ -143,8 +136,8 @@ namespace Scene {
 		assert(reconstructionMask.size() == matchedKeypointsRight.size());
 
 		assert(reconstructionMask.size() == worldPoints.cols);
-		this->projection = projection;//std::move(projection);
-		this->tranform = transform;//std::move(tranform);
+		this->projection = projection;
+		this->tranform = transform;
 
 		// normalize, filter and copy found world points 
 		// also create the worldPoint to match mapping

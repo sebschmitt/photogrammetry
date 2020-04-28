@@ -38,8 +38,7 @@ int main(int argc, char *argv[]) {
 
     parser.parseArguments(argc, argv);
 
-    // iphone test
-    Calibration calb = Calibration();
+    Calibration calibration = Calibration();
 
     if (!(a_loadCalibration.isFound() || a_calibrationImages.isFound())) {
         cout << "Neither " << a_loadCalibration.getName() << " nor " << a_calibrationImages.getName() << " was supplied" << endl;
@@ -59,7 +58,7 @@ int main(int argc, char *argv[]) {
             return -1;
         }
 
-        calb.loadCalibration(path);
+        calibration.loadCalibration(path);
     }
 
     if (a_calibrationImages.isFound()) {
@@ -76,7 +75,6 @@ int main(int argc, char *argv[]) {
         }
 
         // number of inner corners per chessboard row and column
-
         if (!a_calibrationCalibrateRow.isFound()) {
             cout << "Argument " << a_calibrationCalibrateRow.getName() << " is required for calibration" << endl;
             return -1;
@@ -90,7 +88,7 @@ int main(int argc, char *argv[]) {
         unsigned int cornersRow = a_calibrationCalibrateRow.getValue<int>();
         unsigned int cornersColumn = a_calibrationCalibrateColumn.getValue<int>();
 
-        calb.calibrate(filepaths, cv::Size(cornersColumn, cornersRow));
+        calibration.calibrate(filepaths, cv::Size(cornersColumn, cornersRow));
     }
 
     if (a_saveCalibration.isFound()) {
@@ -103,7 +101,7 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        calb.saveCalibration(saveCalibrationFilePath);
+        calibration.saveCalibration(saveCalibrationFilePath);
     }
 
     if (a_matchImages.isFound()) {
@@ -113,13 +111,17 @@ int main(int argc, char *argv[]) {
             return -1;
         }
 
-        // TODO: validate file format
         std::vector<filesystem::path> inputImagePaths;
         for (const auto &entry : filesystem::directory_iterator(matchImagesPath)) {
             inputImagePaths.push_back(entry.path());
         }
 
-        filesystem::path matchOutputPath(a_matchOutputDir.getValue<string>());
+
+        auto parameterPath = a_matchOutputDir.getValue<string>();
+        if (parameterPath.back() == '/' || parameterPath.back() == '\\')
+            parameterPath.pop_back();
+
+        filesystem::path matchOutputPath(parameterPath);
         if (a_matchOutputDir.isFound() && !filesystem::exists(matchOutputPath)) {
             if (!filesystem::create_directories(matchOutputPath)) {
                 cout << "Could not create directory for " << a_matchOutputDir.getName() << endl;
@@ -127,15 +129,19 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        SequenceMatcher sequenceMatcher(calb);
+        Scene::SequenceMatcher sequenceMatcher(calibration);
         Scene::SceneSequence sequence = sequenceMatcher.generateSequence(matchImagesPath, matchOutputPath);
 
-        SceneReconstructor reconstructor(calb);
+        Scene::SceneReconstructor reconstructor(calibration);
         reconstructor.reconstructScenes(sequence.createIterator());
 
 
         if (a_outFile.isFound()) {
-            filesystem::path outputFilePath(a_outFile.getValue<string>());
+            parameterPath = a_outFile.getValue<string>();
+            if (parameterPath.back() == '/' || parameterPath.back() == '\\')
+                parameterPath.pop_back();
+
+            filesystem::path outputFilePath(parameterPath);
             filesystem::path outputFileFolder = outputFilePath.parent_path();
             if (!filesystem::exists(outputFileFolder) || !filesystem::is_directory(outputFileFolder)) {
                 if (!filesystem::create_directories(outputFileFolder)) {

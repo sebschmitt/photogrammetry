@@ -1,7 +1,3 @@
-//
-// Created by Sebastian Schmitt on 19.03.2020.
-//
-
 #ifndef YAPGT_ARGPARSER_H
 #define YAPGT_ARGPARSER_H
 
@@ -21,6 +17,7 @@ namespace argparser {
         Argument* setRequired(bool);
         bool isFound();
 
+        // this works due to c++s operator overloading for the >> operator
         template<typename T> T getValue() {
             std::istringstream in(this->value);
             T t = T();

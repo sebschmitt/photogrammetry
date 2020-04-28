@@ -1,7 +1,3 @@
-//
-// Created by Sebastian Schmitt on 08.04.2020.
-//
-
 #ifndef YAPGT_IMAGE_PAIR_H
 #define YAPGT_IMAGE_PAIR_H
 
@@ -29,14 +25,13 @@ namespace Scene {
 
         Calibration cameraCalibration;
         
-        // std::vector<std::tuple<cv::Point2f, cv::Point2f>> matches;
         std::vector<size_t> matchedKeypointsLeft;
         std::vector<size_t> matchedKeypointsRight;
         std::map<size_t, size_t> rightKeypointsToMatch;
 
         cv::Mat1d projection;
         cv::Mat1d tranform;
-        // cv::Mat1f worldPoints = cv::Mat1f(0, 0);
+
         std::vector<cv::Point3f> worldPoints;
         std::map<size_t, size_t> matchIdxToWorldPoint;
 

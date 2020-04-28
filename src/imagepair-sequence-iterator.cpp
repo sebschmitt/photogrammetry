@@ -1,29 +1,21 @@
 #include "imagepair-sequence-iterator.hpp"
 
-#include <exception>
+namespace Scene {
+    ImageSequenceIterator::ImageSequenceIterator(ImagePair *head) {
+        this->nextNode = head;
+    }
 
-Scene::ImageSequenceIterator::ImageSequenceIterator(ImagePair* head) {
-	this->nextNode = head;
-}
+    bool ImageSequenceIterator::hasNext() {
+        return nextNode != nullptr;
+    }
 
+    ImagePair *Scene::ImageSequenceIterator::next() {
+        if (!hasNext())
+            throw std::out_of_range("Iterator has no next element.");
 
-//void Scene::ImageSequenceIterator::first() {
-//	while (currentNode->prevPair != nullptr)
-//	{
-//		currentNode = currentNode->prevPair;
-//	}
-//}
+        currentNode = nextNode;
+        nextNode = nextNode->nextPair;
 
-bool Scene::ImageSequenceIterator::hasNext() {
-	return nextNode != nullptr;
-}
-
-Scene::ImagePair *Scene::ImageSequenceIterator::next() {
-	if (!hasNext())
-		throw std::out_of_range("Iterator has no next element.");
-
-	currentNode = nextNode;
-	nextNode = nextNode->nextPair;
-
-	return currentNode;
+        return currentNode;
+    }
 }

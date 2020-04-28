@@ -1,7 +1,3 @@
-//
-// Created by Sebastian Schmitt on 08.04.2020.
-//
-
 #ifndef YAPGT_IMAGE_H
 #define YAPGT_IMAGE_H
 

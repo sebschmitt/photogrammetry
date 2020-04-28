@@ -1,7 +1,6 @@
 #ifndef MODEL_EXPORTER_H
 #define MODEL_EXPORTER_H
 
-// #include "imagepair-sequence-iterator.hpp"
 #include "iterator.hpp"
 #include "image-pair.hpp"
 #include "colors.hpp"

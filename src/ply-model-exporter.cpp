@@ -12,13 +12,11 @@ using namespace cv;
 
 
 void PlyModelExporter::exportPointCloudSequence(const filesystem::path& filepath,  Iterator<Scene::ImagePair>* imageSequence) {
-
     std::vector<cv::Point3f> worldPoints;
     std::vector<Colors::Color> colors;
 
     while (imageSequence->hasNext()) {
         Scene::ImagePair *currentScene = imageSequence->next();
-
         std::vector<cv::Point3f> points = currentScene->getWorldPoints();
         
         if (points.size() == 0)
@@ -68,14 +66,6 @@ void PlyModelExporter::writeHeader(ofstream& outputfile, const std::vector<cv::P
     outputfile << "property uchar red" << endl;
     outputfile << "property uchar green" << endl;
     outputfile << "property uchar blue" << endl;
-    /* outputfile << "element face 7" << endl; */
-    /* outputfile << "property list uchar int vertex_index" << endl; */
-    /* outputfile << "element edge 5" << endl; */
-    /* outputfile << "property int vertex1" << endl; */
-    /* outputfile << "property int vertex2" << endl; */
-    /* outputfile << "property uchar red" << endl; */
-    /* outputfile << "property uchar green" << endl; */
-    /* outputfile << "property uchar blue" << endl; */
     outputfile << "end_header" << endl;
 }
 

@@ -7,7 +7,7 @@ Colors::Color Colors::ColorPicker::getAverageColor(const cv::Mat& image, const c
 	assert((image.cols / 2) >= radius);
 	assert((image.rows / 2) >= radius);
 
-	// create rectange with keypoint as the center
+	// create rectangle with keypoint as the center
 	cv::Rect roi(pointInImg.x - radius, pointInImg.y - radius, radius * 2, radius * 2);
 
 	// limit the rect to the image size
@@ -25,7 +25,7 @@ Colors::Color Colors::ColorPicker::getAverageColor(const cv::Mat& image, const c
 			try {
 
 				// ensure current pixel is inside the radius
-				// calulate distance from the pixel (col, row) to the circle center (radius, radius)
+				// calculate distance from the pixel (col, row) to the circle center (radius, radius)
 				if (std::pow(col - radius, 2) + std::pow(row - radius, 2) < std::pow(radius, 2)) {
 					cv::Vec3b pixel = imagePart.at<cv::Vec3b>(row, col);
 					blueCount += pixel[0];
